@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Documentos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Lista de Documentos</h1>
+    <form method="GET" action="{% url 'lista_documentos' %}">
+        <input type="text" name="q" placeholder=" " value="{{ query }}" class="form-control mb-3">
+    </form>
+   
+    <div class="row">
+        {% for documento in documentos %}
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ documento.titulo }}</h5>
+                    <p class="card-text">{{ documento.descripcion|truncatewords:10 }}</p>
+                    <p class="card-text"><small class="text-muted">Subido por {{ documento.autor.username }}</small></p>
+                    <a href="{% url 'detalle_documento' documento.pk %}" class="btn btn-primary">Ver Detalle</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if documentos.has_previous %}
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}">&laquo; primero</a>
+                <a href="?page={{ documentos.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">previo</a>
+            {% endif %}
+
+            <span class="current">
+                pagina {{ documentos.number }} of {{ documentos.paginator.num_pages }}.
+            </span>
+
+            {% if documentos.has_next %}
+                <a href="?page={{ documentos.next_page_number }}{% if query %}&q={{ query }}{% endif %}">siguiente</a>
+                <a href="?page={{ documentos.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">ultimo &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+</div>
+{% endblock %}
+

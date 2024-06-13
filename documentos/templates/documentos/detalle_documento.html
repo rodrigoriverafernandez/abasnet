@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle del Documento{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">{{ documento.titulo }}</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="embed-responsive embed-responsive-16by9">
+                <iframe class="embed-responsive-item" src="{{ documento.archivo.url }}" style="width: 100%; height: 500px;" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <a href="{{ documento.archivo.url }}" class="btn btn-primary mt-3">Descargar</a>
+            <a href="{% url 'inicio' %}" class="btn btn-secondary mt-3">Regresar a Inicio</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

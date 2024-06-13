@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Subir Anuncio{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Subir Anuncio</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_titulo">{{ form.titulo.label }}</label>
+                    {{ form.titulo }}
+                    {% if form.titulo.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {{ form.titulo.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_contenido">{{ form.contenido.label }}</label>
+                    {{ form.contenido }}
+                    {% if form.contenido.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {{ form.contenido.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_categoria">{{ form.categoria.label }}</label>
+                    {{ form.categoria }}
+                    {% if form.categoria.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {{ form.categoria.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_fecha_expiracion">{{ form.fecha_expiracion.label }}</label>
+                    {{ form.fecha_expiracion }}
+                    {% if form.fecha_expiracion.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {{ form.fecha_expiracion.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="id_importancia">{{ form.importancia.label }}</label>
+                    {{ form.importancia }}
+                    {% if form.importancia.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {{ form.importancia.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Publicar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

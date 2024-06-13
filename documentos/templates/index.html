@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<header class="header">
+    <div class="container text-center welcome-container">
+        <h1 class="welcome-title">Bienvenido a la Intranet de la GAB</h1>
+        <p class="welcome-subtitle">Accede a documentos, anuncios y más información relevante para los empleados de la Gerencia de Abastecimientos.</p>
+        <a href="{% url 'lista_documentos' %}" class="btn btn-primary btn-sm">Ver Documentos</a>
+        <a href="{% url 'lista_anuncios' %}" class="btn btn-secondary btn-sm">Ver Anuncios</a>
+        <a href="{% url 'noticias' %}" class="btn btn-success btn-sm">Ver Noticias</a>
+    </div>
+</header>
+
+<section class="icons-section text-center mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                <a href="http://intranet.cfemex.com/etica_corporativa/Paginas/default.aspx">
+                    <i class="fas fa-check-circle fa-3x"></i>
+                    <h5>Ética</h5>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="http://sig.cfe.mx/">
+                    <i class="fas fa-cogs fa-3x"></i>
+                    <h5>SIG</h5>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="https://link_a_genero_e_inclusion.com">
+                    <i class="fas fa-users fa-3x"></i>
+                    <h5>Género e Inclusión</h5>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="https://intranet.cfemex.com/gds/defaul.aspx">
+                    <i class="fas fa-hand-holding-heart fa-3x"></i>
+                    <h5>Desarrollo Social</h5>
+                </a>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <a href="http://normateca.cfemex.com/">
+                    <i class="fas fa-book fa-3x"></i>
+                    <h5>Normateca</h5>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="https://link_a_capacitacion.com">
+                    <i class="fas fa-chalkboard-teacher fa-3x"></i>
+                    <h5>Capacitación</h5>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="http://cstdes.cfemex.com/">
+                    <i class="fas fa-laptop-code fa-3x"></i>
+                    <h5>Servicios Tecnológicos</h5>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="https://mi.cfe.mx/#!/login">
+                    <i class="fas fa-building fa-3x"></i>
+                    <h5>MiCFE</h5>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

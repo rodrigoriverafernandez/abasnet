@@ -1,0 +1,108 @@
+body {
+    padding-top: 56px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.header {
+    background-color: #080d13;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 1rem; /* Tamaño del texto del título */
+    font-weight: bold;
+}
+
+.header p {
+    font-size: .8rem; /* Tamaño del texto del subtítulo */
+}
+
+.features {
+    padding: 40px 0;
+    flex: 1;
+}
+
+.features .feature {
+    margin-bottom: 30px;
+}
+
+.icons-section .container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.icons-section .row {
+    margin-top: 20px;
+}
+
+.icons-section i {
+    font-size: 2rem; /* Ajustar el tamaño del icono */
+}
+
+.footer-custom {
+    background-color: #06030f; /* Verde bandera */
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.footer-custom h5 {
+    margin-bottom: 10px;
+    font-size: 1.0rem; /* Tamaño del texto de los títulos en el footer */
+}
+
+.footer-custom a {
+    color: #eee6e6e9;
+    font-size: 0.9rem; /* Tamaño del texto de los enlaces en el footer */
+    text-decoration: none;
+}
+
+.footer-custom a:hover {
+    color: #ffecb3;
+}
+
+.footer-custom .list-inline-item {
+    margin-right: 15px; /* Espacio entre enlaces */
+}
+
+.footer-custom .list-inline {
+    padding-left: 0;
+    list-style: none;
+    display: flex;
+    justify-content: center; /* Centrar los enlaces */
+}
+
+.card-img-top {
+    height: 200px; /* Ajusta la altura de la imagen */
+    object-fit: cover; /* Mantiene el aspecto de la imagen */
+}
+
+.card-footer {
+    background-color: white;
+    border-top: none;
+    text-align: center;
+}
+
+.row-eq-height {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row-eq-height > [class*='col-'] {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-text.text-truncate {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Número máximo de líneas */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 4.5em; /* Altura máxima para tres líneas */
+    line-height: 1.5em; /* Asegúrate de que la altura de línea esté configurada correctamente */
+}
