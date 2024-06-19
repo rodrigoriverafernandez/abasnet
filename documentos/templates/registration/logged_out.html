@@ -1,0 +1,19 @@
+<!-- registration/logged_out.html -->
+{% extends 'base.html' %}
+
+{% block title %}Cerró la sesión{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Has cerrado sesión</h1>
+    <p>Gracias por usar la Intranet de la Gerencia de Abastecimientos.</p>
+    <a href="{% url 'inicio' %}" class="btn btn-primary">Volver al inicio</a>
+</div>
+{% if messages %}
+    <div class="alert alert-success mt-3">
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

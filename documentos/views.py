@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from .forms import DocumentoForm, AnuncioForm
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.contrib import messages
+from django.contrib.auth import views as auth_views
 
 def inicio(request):
     noticias_generales = Noticia.objects.filter(categoria='general').order_by('-fecha_publicacion')[:3]
@@ -96,3 +98,13 @@ def contacto(request):
 
 def politicas(request):
     return render(request, 'documentos/politicas.html')
+
+
+class CustomLogoutView(auth_views.LogoutView):
+    template_name = 'registration/logged_out.html'
+    next_page = None
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        messages.add_message(request, messages.SUCCESS, 'Has cerrado sesión correctamente.')
+        return response

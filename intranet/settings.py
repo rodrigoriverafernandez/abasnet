@@ -151,3 +151,10 @@ LOGOUT_REDIRECT_URL = '/'
 CORS_ALLOW_ALL_ORIGINS = True
 
 X_FRAME_OPTIONS = 'ALLOWALL'
+
+
+from django.contrib.messages import constants as message_constants
+
+MESSAGE_LEVEL = message_constants.DEBUG
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
