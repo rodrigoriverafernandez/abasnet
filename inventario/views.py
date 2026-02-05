@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime
+import unicodedata
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -45,6 +46,26 @@ def _get_row_value(row, *keys):
     for key in keys:
         if key in row and row[key] is not None:
             return row[key]
+    return ''
+
+
+def _normalize_header(value):
+    cleaned = str(value).strip().replace('*', '').lower()
+    return ''.join(
+        char for char in unicodedata.normalize('NFKD', cleaned) if not unicodedata.combining(char)
+    )
+
+
+def _get_row_value_by_headers(row, headers):
+    if not row:
+        return ''
+    normalized_map = {_normalize_header(key): value for key, value in row.items()}
+    for header in headers:
+        if header in row and row[header] is not None:
+            return row[header]
+        normalized_header = _normalize_header(header)
+        if normalized_header in normalized_map and normalized_map[normalized_header] is not None:
+            return normalized_map[normalized_header]
     return ''
 
 
@@ -158,11 +179,21 @@ def importar_inventario(request):
                         )
                         tipo_equipo = _get_or_create_catalog(TipoEquipo, _get_row_value(row, 'Tipo de equipos*'))
                         modelo = _get_or_create_catalog(ModeloEquipo, _get_row_value(row, 'Modelo*'))
-                        codigo_postal = _normalize_value(_get_row_value(row, 'Codigo Postal'))
-                        domicilio = _normalize_value(_get_row_value(row, 'Domicilio'))
-                        antiguedad = _normalize_value(_get_row_value(row, 'Antiguedad'))
-                        rpe_responsable = _normalize_value(_get_row_value(row, 'RPE'))
-                        nombre_responsable = _normalize_value(_get_row_value(row, 'Nombre Responsable'))
+                        codigo_postal = _normalize_value(
+                            _get_row_value_by_headers(row, ['Código Postal', 'Codigo Postal'])
+                        )
+                        domicilio = _normalize_value(
+                            _get_row_value_by_headers(row, ['Domicilio*', 'Domicilio'])
+                        )
+                        antiguedad = _normalize_value(
+                            _get_row_value_by_headers(row, ['Antigüedad*', 'Antiguedad'])
+                        )
+                        rpe_responsable = _normalize_value(
+                            _get_row_value_by_headers(row, ['RPE de Responsable'])
+                        )
+                        nombre_responsable = _normalize_value(
+                            _get_row_value_by_headers(row, ['Nombre de Responsable'])
+                        )
 
                         equipo_existente = Equipo.objects.filter(identificador=identificador).first()
                         if equipo_existente and modo == 'create_only':
