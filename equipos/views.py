@@ -173,7 +173,7 @@ def reportes_home(request):
         return render(request, "403.html", status=403)
 
     context = {
-        "can_export": _user_can_report(request.user),
+        "can_export": _user_can_view_report(request.user),
     }
     return render(request, "reportes/index.html", context)
 
@@ -224,7 +224,7 @@ def reporte_inventario_activo(request):
         )
 
     if request.GET.get("export") == "1":
-        if not _user_can_report(request.user):
+        if not _user_can_view_report(request.user):
             return render(request, "403.html", status=403)
         return _export_inventario_activo_csv(equipos)
 
@@ -277,7 +277,7 @@ def reporte_inventario_activo(request):
         },
         "pagination_query": _build_querystring(request, exclude={"page"}),
         "export_query": _build_querystring(request, exclude={"page"}, extra={"export": "1"}),
-        "can_export": _user_can_report(request.user),
+        "can_export": _user_can_view_report(request.user),
     }
     return render(request, "reportes/inventario_activo.html", context)
 
@@ -313,7 +313,7 @@ def reporte_equipos_baja(request):
     equipos = equipos.distinct()
 
     if request.GET.get("export") == "1":
-        if not _user_can_report(request.user):
+        if not _user_can_view_report(request.user):
             return render(request, "403.html", status=403)
         return _export_equipos_baja_csv(equipos)
 
@@ -326,9 +326,240 @@ def reporte_equipos_baja(request):
         },
         "tipos_baja": BajaEquipo.TipoBaja.choices,
         "export_query": _build_querystring(request, extra={"export": "1"}),
-        "can_export": _user_can_report(request.user),
+        "can_export": _user_can_view_report(request.user),
     }
     return render(request, "reportes/equipos_baja.html", context)
+
+
+@login_required
+def reporte_centro_costo(request):
+    if not _user_can_view_report(request.user):
+        return render(request, "403.html", status=403)
+
+    equipos = (
+        Equipo.objects.select_related("centro_costo__division__sociedad")
+        .filter(activo=True, is_baja=False)
+    )
+
+    sociedad_id = request.GET.get("sociedad")
+    division_id = request.GET.get("division")
+
+    if sociedad_id:
+        equipos = equipos.filter(centro_costo__division__sociedad_id=sociedad_id)
+    if division_id:
+        equipos = equipos.filter(centro_costo__division_id=division_id)
+
+    resumen = (
+        equipos.values(
+            "centro_costo__division__sociedad__codigo",
+            "centro_costo__division__sociedad__nombre",
+            "centro_costo__division__codigo",
+            "centro_costo__division__nombre",
+            "centro_costo__codigo",
+            "centro_costo__nombre",
+        )
+        .annotate(total=Count("id"))
+        .order_by(
+            "centro_costo__division__sociedad__codigo",
+            "centro_costo__division__codigo",
+            "centro_costo__codigo",
+        )
+    )
+
+    sociedades = (
+        Equipo.objects.values_list(
+            "centro_costo__division__sociedad__id",
+            "centro_costo__division__sociedad__codigo",
+            "centro_costo__division__sociedad__nombre",
+        )
+        .distinct()
+        .order_by("centro_costo__division__sociedad__codigo")
+    )
+    divisiones = (
+        Equipo.objects.values_list(
+            "centro_costo__division__id",
+            "centro_costo__division__codigo",
+            "centro_costo__division__nombre",
+        )
+        .distinct()
+        .order_by("centro_costo__division__codigo")
+    )
+
+    resumen_agrupado = []
+    sociedad_actual = None
+    division_actual = None
+    sociedad_total = 0
+    division_total = 0
+
+    for fila in resumen:
+        sociedad_key = (
+            fila["centro_costo__division__sociedad__codigo"],
+            fila["centro_costo__division__sociedad__nombre"],
+        )
+        division_key = (
+            fila["centro_costo__division__codigo"],
+            fila["centro_costo__division__nombre"],
+        )
+
+        if sociedad_actual and sociedad_key != sociedad_actual:
+            resumen_agrupado.append(
+                {"tipo": "division_subtotal", "total": division_total}
+            )
+            resumen_agrupado.append(
+                {"tipo": "sociedad_subtotal", "total": sociedad_total}
+            )
+            division_total = 0
+            sociedad_total = 0
+            division_actual = None
+
+        if division_actual and division_key != division_actual:
+            resumen_agrupado.append(
+                {"tipo": "division_subtotal", "total": division_total}
+            )
+            division_total = 0
+
+        if sociedad_key != sociedad_actual:
+            resumen_agrupado.append(
+                {
+                    "tipo": "sociedad_header",
+                    "sociedad_codigo": sociedad_key[0],
+                    "sociedad_nombre": sociedad_key[1],
+                }
+            )
+            sociedad_actual = sociedad_key
+            division_actual = None
+
+        if division_key != division_actual:
+            resumen_agrupado.append(
+                {
+                    "tipo": "division_header",
+                    "division_codigo": division_key[0],
+                    "division_nombre": division_key[1],
+                }
+            )
+            division_actual = division_key
+
+        resumen_agrupado.append(
+            {
+                "tipo": "centro_costo",
+                "centro_codigo": fila["centro_costo__codigo"],
+                "centro_nombre": fila["centro_costo__nombre"],
+                "total": fila["total"],
+            }
+        )
+        division_total += fila["total"]
+        sociedad_total += fila["total"]
+
+    if sociedad_actual:
+        resumen_agrupado.append(
+            {"tipo": "division_subtotal", "total": division_total}
+        )
+        resumen_agrupado.append(
+            {"tipo": "sociedad_subtotal", "total": sociedad_total}
+        )
+
+    if request.GET.get("export") == "1":
+        if not _user_can_view_report(request.user):
+            return render(request, "403.html", status=403)
+        return _export_centro_costo_csv(resumen)
+
+    context = {
+        "resumen": resumen_agrupado,
+        "sociedades": sociedades,
+        "divisiones": divisiones,
+        "filtros": {
+            "sociedad": sociedad_id or "",
+            "division": division_id or "",
+        },
+        "export_query": _build_querystring(request, extra={"export": "1"}),
+        "can_export": _user_can_view_report(request.user),
+    }
+    return render(request, "reportes/centro_costo.html", context)
+
+
+@login_required
+def reporte_responsables(request):
+    if not _user_can_view_report(request.user):
+        return render(request, "403.html", status=403)
+
+    equipos = (
+        Equipo.objects.select_related("centro_costo__division__sociedad")
+        .filter(activo=True, is_baja=False)
+    )
+
+    texto = request.GET.get("texto", "").strip()
+    sociedad_id = request.GET.get("sociedad")
+    division_id = request.GET.get("division")
+    centro_costo_id = request.GET.get("centro_costo")
+
+    if sociedad_id:
+        equipos = equipos.filter(centro_costo__division__sociedad_id=sociedad_id)
+    if division_id:
+        equipos = equipos.filter(centro_costo__division_id=division_id)
+    if centro_costo_id:
+        equipos = equipos.filter(centro_costo_id=centro_costo_id)
+    if texto:
+        equipos = equipos.filter(
+            Q(rpe_responsable__icontains=texto) | Q(nombre_responsable__icontains=texto)
+        )
+
+    resumen = (
+        equipos.values(
+            "rpe_responsable",
+            "nombre_responsable",
+            "centro_costo__division__sociedad__codigo",
+            "centro_costo__division__sociedad__nombre",
+            "centro_costo__division__codigo",
+            "centro_costo__division__nombre",
+            "centro_costo__codigo",
+            "centro_costo__nombre",
+        )
+        .annotate(total=Count("id"))
+        .order_by(
+            "nombre_responsable",
+            "rpe_responsable",
+            "centro_costo__division__sociedad__codigo",
+        )
+    )
+
+    if request.GET.get("export") == "1":
+        if not _user_can_view_report(request.user):
+            return render(request, "403.html", status=403)
+        return _export_responsables_csv(resumen)
+
+    context = {
+        "resumen": resumen,
+        "sociedades": Equipo.objects.values_list(
+            "centro_costo__division__sociedad__id",
+            "centro_costo__division__sociedad__codigo",
+            "centro_costo__division__sociedad__nombre",
+        )
+        .distinct()
+        .order_by("centro_costo__division__sociedad__codigo"),
+        "divisiones": Equipo.objects.values_list(
+            "centro_costo__division__id",
+            "centro_costo__division__codigo",
+            "centro_costo__division__nombre",
+        )
+        .distinct()
+        .order_by("centro_costo__division__codigo"),
+        "centros_costo": Equipo.objects.values_list(
+            "centro_costo__id",
+            "centro_costo__codigo",
+            "centro_costo__nombre",
+        )
+        .distinct()
+        .order_by("centro_costo__codigo"),
+        "filtros": {
+            "sociedad": sociedad_id or "",
+            "division": division_id or "",
+            "centro_costo": centro_costo_id or "",
+            "texto": texto,
+        },
+        "export_query": _build_querystring(request, extra={"export": "1"}),
+        "can_export": _user_can_view_report(request.user),
+    }
+    return render(request, "reportes/responsables.html", context)
 
 
 @login_required
@@ -450,6 +681,62 @@ def _export_equipos_baja_csv(equipos):
                 equipo.centro_costo,
                 equipo.marca or "",
                 equipo.tipo_equipo or "",
+            ]
+        )
+    return response
+
+
+def _export_centro_costo_csv(resumen):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="reporte_centro_costo.csv"'
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "Sociedad",
+            "Division",
+            "Centro de costo",
+            "Total equipos",
+        ]
+    )
+    for fila in resumen:
+        writer.writerow(
+            [
+                f"{fila['centro_costo__division__sociedad__codigo']} - "
+                f"{fila['centro_costo__division__sociedad__nombre']}",
+                f"{fila['centro_costo__division__codigo']} - "
+                f"{fila['centro_costo__division__nombre']}",
+                f"{fila['centro_costo__codigo']} - {fila['centro_costo__nombre']}",
+                fila["total"],
+            ]
+        )
+    return response
+
+
+def _export_responsables_csv(resumen):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="reporte_responsables.csv"'
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "Responsable",
+            "RPE",
+            "Sociedad",
+            "Division",
+            "Centro de costo",
+            "Total equipos",
+        ]
+    )
+    for fila in resumen:
+        writer.writerow(
+            [
+                fila["nombre_responsable"] or "",
+                fila["rpe_responsable"] or "",
+                f"{fila['centro_costo__division__sociedad__codigo']} - "
+                f"{fila['centro_costo__division__sociedad__nombre']}",
+                f"{fila['centro_costo__division__codigo']} - "
+                f"{fila['centro_costo__division__nombre']}",
+                f"{fila['centro_costo__codigo']} - {fila['centro_costo__nombre']}",
+                fila["total"],
             ]
         )
     return response
