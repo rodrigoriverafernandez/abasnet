@@ -31,6 +31,7 @@
     <main class="container py-4">
         {% if user.is_authenticated %}
             <div class="d-flex flex-wrap gap-2 mb-3">
+                <a class="btn btn-outline-primary" href="{% url 'reportes_home' %}">Reportes</a>
                 {% if perms.equipos.add_equipo %}
                     <a class="btn btn-primary" href="/admin/equipos/equipo/add/">Nuevo equipo</a>
                 {% endif %}
