@@ -19,12 +19,21 @@
                 {% if user.is_authenticated %}
                     <div class="d-flex flex-wrap gap-2 align-items-center text-white">
                         <a class="nav-link text-white px-2" href="/equipos/">Equipos</a>
-                        <a class="nav-link text-white px-2" href="/bajas/">Bajas</a>
-                        <a class="nav-link text-white px-2" href="/reportes/">Reportes</a>
-                        {% if user.is_superuser %}
+                        {% if can_import %}
                             <a class="nav-link text-white px-2" href="/importar">Importar</a>
                         {% endif %}
-                        <a class="nav-link text-white px-2" href="/admin/">Admin</a>
+                        {% if can_baja %}
+                            <a class="nav-link text-white px-2" href="/bajas/">Bajas</a>
+                        {% endif %}
+                        {% if can_view_report %}
+                            <a class="nav-link text-white px-2" href="/reportes/">Reportes</a>
+                        {% endif %}
+                        {% if can_audit %}
+                            <a class="nav-link text-white px-2" href="/auditoria/">Auditoría</a>
+                        {% endif %}
+                        {% if user.is_superuser %}
+                            <a class="nav-link text-white px-2" href="/admin/">Admin</a>
+                        {% endif %}
                     </div>
                 {% endif %}
                 <div class="ms-auto d-flex align-items-center gap-3 text-white">
@@ -32,7 +41,7 @@
                         <span class="small">Usuario: {{ user.get_username }}</span>
                         <form method="post" action="{% url 'logout' %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+                            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
                         </form>
                     {% else %}
                         <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Iniciar sesión</a>
@@ -44,12 +53,11 @@
     <main class="container py-4">
         {% if user.is_authenticated %}
             <div class="d-flex flex-wrap gap-2 mb-3">
-                <a class="btn btn-outline-primary" href="{% url 'reportes_home' %}">Reportes</a>
+                {% if can_view_report %}
+                    <a class="btn btn-outline-primary" href="{% url 'reportes_home' %}">Reportes</a>
+                {% endif %}
                 {% if perms.equipos.add_equipo %}
                     <a class="btn btn-primary" href="/admin/equipos/equipo/add/">Nuevo equipo</a>
-                {% endif %}
-                {% if perms.equipos.change_equipo %}
-                    <a class="btn btn-outline-secondary" href="/admin/equipos/equipo/">Editar equipos</a>
                 {% endif %}
             </div>
         {% endif %}

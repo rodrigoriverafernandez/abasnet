@@ -19,18 +19,8 @@ from equipos.models import (
     Sociedad,
     TipoEquipo,
 )
-
-
-ALLOWED_GROUPS = {'ADMIN', 'SOPORTE'}
+from equipos.permissions import can_import
 ERRORS_LIMIT = 50
-
-
-def _user_can_import(user):
-    if not user.is_authenticated:
-        return False
-    if user.is_superuser:
-        return True
-    return user.groups.filter(name__in=ALLOWED_GROUPS).exists()
 
 
 def _normalize_value(value):
@@ -83,7 +73,7 @@ def permission_denied(request, exception=None):
 
 @login_required
 def importar_inventario(request):
-    if not _user_can_import(request.user):
+    if not can_import(request.user):
         return render(request, '403.html', status=403)
 
     context = {
