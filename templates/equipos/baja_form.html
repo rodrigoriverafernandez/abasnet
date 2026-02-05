@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Dar de baja{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Dar de baja equipo</h1>
+        <p class="text-muted mb-0">{{ equipo.identificador }} - {{ equipo.nombre }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'equipo_detail' equipo.pk %}">Volver</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label" for="tipo_baja">Tipo de baja</label>
+                <select class="form-select" id="tipo_baja" name="tipo_baja" required>
+                    <option value="">Seleccione una opción</option>
+                    {% for value, label in tipos_baja %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="alert alert-warning">
+                Esta acción marcará el equipo como dado de baja y registrará el historial correspondiente.
+            </div>
+            <button type="submit" class="btn btn-danger">Confirmar baja</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
