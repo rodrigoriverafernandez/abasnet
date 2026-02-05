@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Sociedad(models.Model):
@@ -82,10 +83,36 @@ class Equipo(models.Model):
     tipo_equipo = models.ForeignKey(TipoEquipo, on_delete=models.PROTECT, null=True, blank=True)
     modelo = models.ForeignKey(ModeloEquipo, on_delete=models.PROTECT, null=True, blank=True)
     activo = models.BooleanField(default=True)
+    is_baja = models.BooleanField(default=False)
+    fecha_baja = models.DateTimeField(null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.nombre} ({self.numero_serie})"
+
+    def registrar_baja(self, tipo_baja, usuario=None, resumen=None):
+        self.is_baja = True
+        self.fecha_baja = timezone.now()
+        update_fields = ["is_baja", "fecha_baja"]
+        if hasattr(self, "estado"):
+            try:
+                self.estado = "BAJA"
+                update_fields.append("estado")
+            except (TypeError, ValueError):
+                pass
+        self.save(update_fields=update_fields)
+        BajaEquipo.objects.create(
+            equipo=self,
+            fecha_baja=self.fecha_baja,
+            tipo_baja=tipo_baja,
+        )
+        if resumen is None:
+            resumen = f"Baja registrada para el equipo {self.identificador} ({self.numero_serie})."
+        AuditLog.objects.create(
+            usuario=usuario,
+            accion="BAJA_EQUIPO",
+            resumen=resumen,
+        )
 
 
 class ImportLog(models.Model):
@@ -111,3 +138,16 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.accion} {self.fecha:%Y-%m-%d %H:%M}"
+
+
+class BajaEquipo(models.Model):
+    class TipoBaja(models.TextChoices):
+        TEMPORAL = "TEMPORAL", "Temporal"
+        DEFINITIVA = "DEFINITIVA", "Definitiva"
+
+    equipo = models.ForeignKey(Equipo, on_delete=models.PROTECT, related_name="bajas")
+    fecha_baja = models.DateTimeField(default=timezone.now)
+    tipo_baja = models.CharField(max_length=20, choices=TipoBaja.choices)
+
+    def __str__(self):
+        return f"{self.equipo.identificador} - {self.get_tipo_baja_display()}"

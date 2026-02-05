@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     AuditLog,
+    BajaEquipo,
     CentroCosto,
     Division,
     Equipo,
@@ -45,6 +46,8 @@ class EquipoAdmin(admin.ModelAdmin):
         'marca',
         'sistema_operativo',
         'activo',
+        'is_baja',
+        'fecha_baja',
         'creado_en',
     )
     search_fields = (
@@ -54,7 +57,7 @@ class EquipoAdmin(admin.ModelAdmin):
         'numero_serie',
         'centro_costo__nombre',
     )
-    list_filter = ('activo', 'centro_costo', 'marca', 'sistema_operativo', 'tipo_equipo')
+    list_filter = ('activo', 'is_baja', 'centro_costo', 'marca', 'sistema_operativo', 'tipo_equipo')
 
 
 @admin.register(Marca)
@@ -88,3 +91,10 @@ class ImportLogAdmin(admin.ModelAdmin):
 class AuditLogAdmin(admin.ModelAdmin):
     list_display = ('fecha', 'usuario', 'accion')
     search_fields = ('accion', 'usuario__username')
+
+
+@admin.register(BajaEquipo)
+class BajaEquipoAdmin(admin.ModelAdmin):
+    list_display = ('equipo', 'tipo_baja', 'fecha_baja')
+    search_fields = ('equipo__identificador', 'equipo__numero_serie')
+    list_filter = ('tipo_baja', 'fecha_baja')
