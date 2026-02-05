@@ -21,37 +21,106 @@
 
 <form method="get" class="mb-3">
     <div class="row g-2 align-items-end">
-        <div class="col-md-3">
-            <label class="form-label" for="codigo_postal">Código postal</label>
+        <div class="col-md-4">
+            <label class="form-label" for="texto">Búsqueda</label>
             <input
                 class="form-control"
                 type="text"
-                id="codigo_postal"
-                name="codigo_postal"
-                value="{{ filtros.codigo_postal }}"
+                id="texto"
+                name="texto"
+                placeholder="Inventario, clave, serie, IP, MAC, RPE, responsable, marca, modelo"
+                value="{{ filtros.texto }}"
             >
         </div>
-        <div class="col-md-3">
-            <label class="form-label" for="rpe_responsable">RPE responsable</label>
-            <input
-                class="form-control"
-                type="text"
-                id="rpe_responsable"
-                name="rpe_responsable"
-                value="{{ filtros.rpe_responsable }}"
-            >
+        <div class="col-md-2">
+            <label class="form-label" for="sociedad">Sociedad</label>
+            <select class="form-select" id="sociedad" name="sociedad">
+                <option value="">Todas</option>
+                {% for id, codigo, nombre in sociedades %}
+                    <option value="{{ id }}" {% if filtros.sociedad == id|stringformat:"s" %}selected{% endif %}>
+                        {{ codigo }} - {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
-        <div class="col-md-3">
-            <label class="form-label" for="nombre_responsable">Nombre responsable</label>
-            <input
-                class="form-control"
-                type="text"
-                id="nombre_responsable"
-                name="nombre_responsable"
-                value="{{ filtros.nombre_responsable }}"
-            >
+        <div class="col-md-2">
+            <label class="form-label" for="division">División</label>
+            <select class="form-select" id="division" name="division">
+                <option value="">Todas</option>
+                {% for id, codigo, nombre in divisiones %}
+                    <option value="{{ id }}" {% if filtros.division == id|stringformat:"s" %}selected{% endif %}>
+                        {{ codigo }} - {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <label class="form-label" for="centro_costo">Centro de costo</label>
+            <select class="form-select" id="centro_costo" name="centro_costo">
+                <option value="">Todos</option>
+                {% for id, codigo, nombre in centros_costo %}
+                    <option value="{{ id }}" {% if filtros.centro_costo == id|stringformat:"s" %}selected{% endif %}>
+                        {{ codigo }} - {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="marca">Marca</label>
+            <select class="form-select" id="marca" name="marca">
+                <option value="">Todas</option>
+                {% for id, nombre in marcas %}
+                    <option value="{{ id }}" {% if filtros.marca == id|stringformat:"s" %}selected{% endif %}>
+                        {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="sistema_operativo">Sistema operativo</label>
+            <select class="form-select" id="sistema_operativo" name="sistema_operativo">
+                <option value="">Todos</option>
+                {% for id, nombre in sistemas_operativos %}
+                    <option value="{{ id }}" {% if filtros.sistema_operativo == id|stringformat:"s" %}selected{% endif %}>
+                        {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="tipo_equipo">Tipo de equipo</label>
+            <select class="form-select" id="tipo_equipo" name="tipo_equipo">
+                <option value="">Todos</option>
+                {% for id, nombre in tipos_equipo %}
+                    <option value="{{ id }}" {% if filtros.tipo_equipo == id|stringformat:"s" %}selected{% endif %}>
+                        {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="entidad">Entidad</label>
+            <select class="form-select" id="entidad" name="entidad">
+                <option value="">Todas</option>
+                {% for nombre in entidades %}
+                    <option value="{{ nombre }}" {% if filtros.entidad == nombre %}selected{% endif %}>
+                        {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="municipio">Municipio</label>
+            <select class="form-select" id="municipio" name="municipio">
+                <option value="">Todos</option>
+                {% for nombre in municipios %}
+                    <option value="{{ nombre }}" {% if filtros.municipio == nombre %}selected{% endif %}>
+                        {{ nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
             <div class="form-check mt-4">
                 <input
                     class="form-check-input"
@@ -74,15 +143,17 @@
     <table class="table table-striped align-middle">
         <thead>
             <tr>
-                <th>Identificador</th>
-                <th>Nombre</th>
-                <th>Serie</th>
-                <th>Centro de costo</th>
+                <th>Inventario / Clave</th>
                 <th>Marca</th>
-                <th>Domicilio</th>
-                <th>Antigüedad</th>
-                <th>Código postal</th>
+                <th>Modelo</th>
+                <th>Serie</th>
+                <th>Sistema operativo</th>
+                <th>IP</th>
+                <th>RPE</th>
                 <th>Responsable</th>
+                <th>Domicilio</th>
+                <th>Código postal</th>
+                <th>Centro de costo</th>
                 <th>Estado</th>
                 <th></th>
             </tr>
@@ -90,21 +161,21 @@
         <tbody>
             {% for equipo in equipos %}
                 <tr>
-                    <td>{{ equipo.identificador }}</td>
-                    <td>{{ equipo.nombre }}</td>
-                    <td>{{ equipo.numero_serie }}</td>
                     <td>
-                        {{ equipo.centro_costo.codigo }} - {{ equipo.centro_costo.nombre }}
+                        <div class="fw-semibold">{{ equipo.numero_inventario|default:"-" }}</div>
+                        <div class="text-muted small">{{ equipo.clave|default:"-" }}</div>
                     </td>
                     <td>{{ equipo.marca|default:"-" }}</td>
+                    <td>{{ equipo.modelo|default:"-" }}</td>
+                    <td>{{ equipo.numero_serie }}</td>
+                    <td>{{ equipo.sistema_operativo|default:"-" }}</td>
+                    <td>{{ equipo.direccion_ip|default:"-" }}</td>
+                    <td>{{ equipo.rpe_responsable|default:"-" }}</td>
+                    <td>{{ equipo.nombre_responsable|default:"-" }}</td>
                     <td>{{ equipo.domicilio|default:"-" }}</td>
-                    <td>{{ equipo.antiguedad|default:"-" }}</td>
                     <td>{{ equipo.codigo_postal|default:"-" }}</td>
                     <td>
-                        {{ equipo.rpe_responsable|default:"-" }}
-                        {% if equipo.nombre_responsable %}
-                            <div class="text-muted small">{{ equipo.nombre_responsable }}</div>
-                        {% endif %}
+                        {{ equipo.centro_costo.codigo }} - {{ equipo.centro_costo.nombre }}
                     </td>
                     <td>
                         {% if equipo.is_baja %}
@@ -121,7 +192,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="11" class="text-center text-muted">
+                    <td colspan="13" class="text-center text-muted">
                         No se encontraron equipos con el filtro seleccionado.
                     </td>
                 </tr>
@@ -129,4 +200,36 @@
         </tbody>
     </table>
 </div>
+
+{% if page_obj.has_other_pages %}
+    <nav aria-label="Paginación de equipos">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                <a class="page-link" href="?page=1{% if pagination_query %}&{{ pagination_query }}{% endif %}">
+                    Primera
+                </a>
+            </li>
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if pagination_query %}&{{ pagination_query }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if pagination_query %}&{{ pagination_query }}{% endif %}">
+                    Siguiente
+                </a>
+            </li>
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if pagination_query %}&{{ pagination_query }}{% endif %}">
+                    Última
+                </a>
+            </li>
+        </ul>
+    </nav>
+{% endif %}
 {% endblock %}

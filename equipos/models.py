@@ -73,6 +73,10 @@ class Equipo(models.Model):
     numero_inventario = models.CharField(max_length=150, blank=True)
     nombre = models.CharField(max_length=150)
     numero_serie = models.CharField(max_length=100, unique=True)
+    direccion_ip = models.CharField(max_length=50, blank=True, null=True)
+    direccion_mac = models.CharField(max_length=50, blank=True, null=True)
+    entidad = models.CharField(max_length=150, blank=True, null=True)
+    municipio = models.CharField(max_length=150, blank=True, null=True)
     marca = models.ForeignKey(Marca, on_delete=models.PROTECT, null=True, blank=True)
     sistema_operativo = models.ForeignKey(
         SistemaOperativo,
@@ -86,6 +90,7 @@ class Equipo(models.Model):
     is_baja = models.BooleanField(default=False)
     fecha_baja = models.DateTimeField(null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
     codigo_postal = models.CharField(max_length=10, blank=True, null=True)
     domicilio = models.CharField(max_length=255, blank=True, null=True)
     antiguedad = models.CharField(max_length=50, blank=True, null=True)
@@ -95,7 +100,7 @@ class Equipo(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.numero_serie})"
 
-    def registrar_baja(self, tipo_baja, usuario=None, resumen=None):
+    def registrar_baja(self, tipo_baja, usuario=None, resumen=None, motivo=None, comentarios=None):
         self.is_baja = True
         self.fecha_baja = timezone.now()
         update_fields = ["is_baja", "fecha_baja"]
@@ -110,6 +115,9 @@ class Equipo(models.Model):
             equipo=self,
             fecha_baja=self.fecha_baja,
             tipo_baja=tipo_baja,
+            motivo=motivo,
+            comentarios=comentarios or "",
+            usuario=usuario,
         )
         if resumen is None:
             resumen = f"Baja registrada para el equipo {self.identificador} ({self.numero_serie})."
@@ -145,6 +153,13 @@ class AuditLog(models.Model):
         return f"{self.accion} {self.fecha:%Y-%m-%d %H:%M}"
 
 
+class MotivoBaja(models.Model):
+    nombre = models.CharField(max_length=150, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
 class BajaEquipo(models.Model):
     class TipoBaja(models.TextChoices):
         TEMPORAL = "TEMPORAL", "Temporal"
@@ -153,6 +168,15 @@ class BajaEquipo(models.Model):
     equipo = models.ForeignKey(Equipo, on_delete=models.PROTECT, related_name="bajas")
     fecha_baja = models.DateTimeField(default=timezone.now)
     tipo_baja = models.CharField(max_length=20, choices=TipoBaja.choices)
+    motivo = models.ForeignKey(
+        MotivoBaja,
+        on_delete=models.PROTECT,
+        related_name="bajas",
+        null=True,
+        blank=True,
+    )
+    comentarios = models.TextField(blank=True)
+    usuario = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"{self.equipo.identificador} - {self.get_tipo_baja_display()}"

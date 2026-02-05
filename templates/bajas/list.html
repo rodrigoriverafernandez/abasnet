@@ -8,7 +8,10 @@
         <h1 class="h3 mb-1">Bajas registradas</h1>
         <p class="text-muted mb-0">Historial de equipos dados de baja.</p>
     </div>
-    <a class="btn btn-outline-secondary" href="{% url 'equipos_list' %}">Volver a equipos</a>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="?{{ export_query }}">Exportar CSV</a>
+        <a class="btn btn-outline-secondary" href="{% url 'equipos_list' %}">Volver a equipos</a>
+    </div>
 </div>
 
 {% if messages %}
@@ -17,6 +20,45 @@
     {% endfor %}
 {% endif %}
 
+<form method="get" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label" for="fecha_desde">Fecha desde</label>
+            <input
+                class="form-control"
+                type="date"
+                id="fecha_desde"
+                name="fecha_desde"
+                value="{{ filtros.fecha_desde }}"
+            >
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="fecha_hasta">Fecha hasta</label>
+            <input
+                class="form-control"
+                type="date"
+                id="fecha_hasta"
+                name="fecha_hasta"
+                value="{{ filtros.fecha_hasta }}"
+            >
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="motivo">Motivo</label>
+            <select class="form-select" id="motivo" name="motivo">
+                <option value="">Todos</option>
+                {% for motivo in motivos %}
+                    <option value="{{ motivo.id }}" {% if filtros.motivo == motivo.id|stringformat:"s" %}selected{% endif %}>
+                        {{ motivo.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+        </div>
+    </div>
+</form>
+
 <div class="table-responsive">
     <table class="table table-striped align-middle">
         <thead>
@@ -24,7 +66,9 @@
                 <th>Equipo</th>
                 <th>Serie</th>
                 <th>Tipo de baja</th>
+                <th>Motivo</th>
                 <th>Fecha</th>
+                <th>Usuario</th>
                 <th></th>
             </tr>
         </thead>
@@ -34,7 +78,9 @@
                     <td>{{ baja.equipo.identificador }}</td>
                     <td>{{ baja.equipo.numero_serie }}</td>
                     <td>{{ baja.get_tipo_baja_display }}</td>
+                    <td>{{ baja.motivo|default:"-" }}</td>
                     <td>{{ baja.fecha_baja|date:"d/m/Y H:i" }}</td>
+                    <td>{{ baja.usuario.get_username|default:"-" }}</td>
                     <td class="text-end">
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'equipo_detail' baja.equipo.pk %}">
                             Ver equipo
@@ -43,7 +89,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center text-muted">
+                    <td colspan="7" class="text-center text-muted">
                         No hay bajas registradas.
                     </td>
                 </tr>

@@ -25,6 +25,12 @@
 <div class="card mb-3">
     <div class="card-body">
         <dl class="row mb-0">
+            <dt class="col-sm-4">Inventario</dt>
+            <dd class="col-sm-8">{{ equipo.numero_inventario|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Clave</dt>
+            <dd class="col-sm-8">{{ equipo.clave|default:"-" }}</dd>
+
             <dt class="col-sm-4">Número de serie</dt>
             <dd class="col-sm-8">{{ equipo.numero_serie }}</dd>
 
@@ -50,6 +56,18 @@
 
             <dt class="col-sm-4">Modelo</dt>
             <dd class="col-sm-8">{{ equipo.modelo|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Dirección IP</dt>
+            <dd class="col-sm-8">{{ equipo.direccion_ip|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Dirección MAC</dt>
+            <dd class="col-sm-8">{{ equipo.direccion_mac|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Entidad</dt>
+            <dd class="col-sm-8">{{ equipo.entidad|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Municipio</dt>
+            <dd class="col-sm-8">{{ equipo.municipio|default:"-" }}</dd>
 
             <dt class="col-sm-4">Domicilio</dt>
             <dd class="col-sm-8">{{ equipo.domicilio|default:"-" }}</dd>
@@ -78,6 +96,44 @@
                 {% endif %}
             </dd>
         </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Historial de bajas</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Motivo</th>
+                        <th>Usuario</th>
+                        <th>Comentarios</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for baja in bajas %}
+                        <tr>
+                            <td>{{ baja.fecha_baja|date:"d/m/Y H:i" }}</td>
+                            <td>{{ baja.get_tipo_baja_display }}</td>
+                            <td>{{ baja.motivo|default:"-" }}</td>
+                            <td>{{ baja.usuario.get_username|default:"-" }}</td>
+                            <td>{{ baja.comentarios|default:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No hay bajas registradas para este equipo.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

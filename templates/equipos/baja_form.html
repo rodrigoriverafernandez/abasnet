@@ -26,9 +26,32 @@
                 <select class="form-select" id="tipo_baja" name="tipo_baja" required>
                     <option value="">Seleccione una opción</option>
                     {% for value, label in tipos_baja %}
-                        <option value="{{ value }}">{{ label }}</option>
+                        <option value="{{ value }}" {% if form_data.tipo_baja == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="motivo">Motivo</label>
+                <select class="form-select" id="motivo" name="motivo" required>
+                    <option value="">Seleccione una opción</option>
+                    {% for motivo in motivos %}
+                        <option value="{{ motivo.id }}" {% if form_data.motivo == motivo.id|stringformat:"s" %}selected{% endif %}>
+                            {{ motivo.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="comentarios">Comentarios</label>
+                <textarea
+                    class="form-control"
+                    id="comentarios"
+                    name="comentarios"
+                    rows="4"
+                    placeholder="Detalle adicional sobre la baja"
+                >{{ form_data.comentarios }}</textarea>
             </div>
             <div class="alert alert-warning">
                 Esta acción marcará el equipo como dado de baja y registrará el historial correspondiente.

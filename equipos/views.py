@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_date
 from django.utils import timezone
 
-from .models import AuditLog, BajaEquipo, Equipo
+from .models import AuditLog, BajaEquipo, Equipo, MotivoBaja
 
 
 ALLOWED_BAJA_GROUPS = {"ADMIN", "SOPORTE"}
@@ -56,9 +56,15 @@ def _build_querystring(request, exclude=None, extra=None):
 @login_required
 def equipos_list(request):
     include_bajas = request.GET.get("include_bajas") == "1"
-    codigo_postal = request.GET.get("codigo_postal", "").strip()
-    rpe_responsable = request.GET.get("rpe_responsable", "").strip()
-    nombre_responsable = request.GET.get("nombre_responsable", "").strip()
+    texto = request.GET.get("texto", "").strip()
+    sociedad_id = request.GET.get("sociedad")
+    division_id = request.GET.get("division")
+    centro_costo_id = request.GET.get("centro_costo")
+    marca_id = request.GET.get("marca")
+    sistema_operativo_id = request.GET.get("sistema_operativo")
+    tipo_equipo_id = request.GET.get("tipo_equipo")
+    entidad = request.GET.get("entidad", "").strip()
+    municipio = request.GET.get("municipio", "").strip()
     equipos = (
         Equipo.objects.select_related(
             "centro_costo__division__sociedad",
@@ -67,25 +73,107 @@ def equipos_list(request):
             "tipo_equipo",
             "modelo",
         )
-        .order_by("identificador")
+        .order_by("-actualizado_en", "identificador")
     )
     if not include_bajas:
         equipos = equipos.filter(is_baja=False)
-    if codigo_postal:
-        equipos = equipos.filter(codigo_postal__icontains=codigo_postal)
-    if rpe_responsable:
-        equipos = equipos.filter(rpe_responsable__icontains=rpe_responsable)
-    if nombre_responsable:
-        equipos = equipos.filter(nombre_responsable__icontains=nombre_responsable)
+    if sociedad_id:
+        equipos = equipos.filter(centro_costo__division__sociedad_id=sociedad_id)
+    if division_id:
+        equipos = equipos.filter(centro_costo__division_id=division_id)
+    if centro_costo_id:
+        equipos = equipos.filter(centro_costo_id=centro_costo_id)
+    if marca_id:
+        equipos = equipos.filter(marca_id=marca_id)
+    if sistema_operativo_id:
+        equipos = equipos.filter(sistema_operativo_id=sistema_operativo_id)
+    if tipo_equipo_id:
+        equipos = equipos.filter(tipo_equipo_id=tipo_equipo_id)
+    if entidad:
+        equipos = equipos.filter(entidad=entidad)
+    if municipio:
+        equipos = equipos.filter(municipio=municipio)
+    if texto:
+        equipos = equipos.filter(
+            Q(identificador__icontains=texto)
+            | Q(clave__icontains=texto)
+            | Q(numero_inventario__icontains=texto)
+            | Q(numero_serie__icontains=texto)
+            | Q(direccion_ip__icontains=texto)
+            | Q(direccion_mac__icontains=texto)
+            | Q(rpe_responsable__icontains=texto)
+            | Q(nombre_responsable__icontains=texto)
+            | Q(modelo__nombre__icontains=texto)
+            | Q(marca__nombre__icontains=texto)
+            | Q(nombre__icontains=texto)
+        )
+
+    paginator = Paginator(equipos, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
 
     context = {
-        "equipos": equipos,
+        "equipos": page_obj,
+        "page_obj": page_obj,
         "include_bajas": include_bajas,
+        "sociedades": Equipo.objects.values_list(
+            "centro_costo__division__sociedad__id",
+            "centro_costo__division__sociedad__codigo",
+            "centro_costo__division__sociedad__nombre",
+        )
+        .distinct()
+        .order_by("centro_costo__division__sociedad__codigo"),
+        "divisiones": Equipo.objects.values_list(
+            "centro_costo__division__id",
+            "centro_costo__division__codigo",
+            "centro_costo__division__nombre",
+        )
+        .distinct()
+        .order_by("centro_costo__division__codigo"),
+        "centros_costo": Equipo.objects.values_list(
+            "centro_costo__id",
+            "centro_costo__codigo",
+            "centro_costo__nombre",
+        )
+        .distinct()
+        .order_by("centro_costo__codigo"),
+        "marcas": Equipo.objects.values_list("marca__id", "marca__nombre")
+        .distinct()
+        .order_by("marca__nombre"),
+        "sistemas_operativos": Equipo.objects.values_list(
+            "sistema_operativo__id",
+            "sistema_operativo__nombre",
+        )
+        .distinct()
+        .order_by("sistema_operativo__nombre"),
+        "tipos_equipo": Equipo.objects.values_list("tipo_equipo__id", "tipo_equipo__nombre")
+        .distinct()
+        .order_by("tipo_equipo__nombre"),
+        "entidades": (
+            Equipo.objects.exclude(entidad__isnull=True)
+            .exclude(entidad__exact="")
+            .values_list("entidad", flat=True)
+            .distinct()
+            .order_by("entidad")
+        ),
+        "municipios": (
+            Equipo.objects.exclude(municipio__isnull=True)
+            .exclude(municipio__exact="")
+            .values_list("municipio", flat=True)
+            .distinct()
+            .order_by("municipio")
+        ),
         "filtros": {
-            "codigo_postal": codigo_postal,
-            "rpe_responsable": rpe_responsable,
-            "nombre_responsable": nombre_responsable,
+            "texto": texto,
+            "sociedad": sociedad_id or "",
+            "division": division_id or "",
+            "centro_costo": centro_costo_id or "",
+            "marca": marca_id or "",
+            "sistema_operativo": sistema_operativo_id or "",
+            "tipo_equipo": tipo_equipo_id or "",
+            "entidad": entidad,
+            "municipio": municipio,
         },
+        "pagination_query": _build_querystring(request, exclude={"page"}),
         "can_baja": _user_can_baja(request.user),
     }
     return render(request, "equipos/list.html", context)
@@ -93,6 +181,9 @@ def equipos_list(request):
 
 @login_required
 def equipo_detail(request, pk):
+    bajas_queryset = BajaEquipo.objects.select_related("motivo", "usuario").order_by(
+        "-fecha_baja"
+    )
     equipo = get_object_or_404(
         Equipo.objects.select_related(
             "centro_costo__division__sociedad",
@@ -100,11 +191,12 @@ def equipo_detail(request, pk):
             "sistema_operativo",
             "tipo_equipo",
             "modelo",
-        ),
+        ).prefetch_related(Prefetch("bajas", queryset=bajas_queryset)),
         pk=pk,
     )
     context = {
         "equipo": equipo,
+        "bajas": equipo.bajas.all(),
         "can_baja": _user_can_baja(request.user),
     }
     return render(request, "equipos/detail.html", context)
@@ -120,11 +212,30 @@ def equipo_baja(request, pk):
         messages.warning(request, "El equipo ya se encuentra dado de baja.")
         return redirect("equipo_detail", pk=equipo.pk)
 
+    motivos = MotivoBaja.objects.order_by("nombre")
+    form_data = {
+        "tipo_baja": "",
+        "motivo": "",
+        "comentarios": "",
+    }
+
     if request.method == "POST":
         tipo_baja = request.POST.get("tipo_baja")
+        motivo_id = request.POST.get("motivo")
+        comentarios = request.POST.get("comentarios", "").strip()
+        form_data.update(
+            {
+                "tipo_baja": tipo_baja or "",
+                "motivo": motivo_id or "",
+                "comentarios": comentarios,
+            }
+        )
         valid_choices = {choice[0] for choice in BajaEquipo.TipoBaja.choices}
+        motivo = MotivoBaja.objects.filter(pk=motivo_id).first() if motivo_id else None
         if tipo_baja not in valid_choices:
             messages.error(request, "Seleccione un tipo de baja válido.")
+        elif not motivo:
+            messages.error(request, "Seleccione un motivo de baja válido.")
         else:
             equipo.is_baja = True
             equipo.fecha_baja = timezone.now()
@@ -133,13 +244,16 @@ def equipo_baja(request, pk):
                 equipo=equipo,
                 fecha_baja=equipo.fecha_baja,
                 tipo_baja=tipo_baja,
+                motivo=motivo,
+                comentarios=comentarios,
+                usuario=request.user,
             )
             AuditLog.objects.create(
                 usuario=request.user,
                 accion="BAJA",
                 resumen=(
                     f"Baja registrada para el equipo {equipo.identificador} "
-                    f"({equipo.numero_serie})."
+                    f"({equipo.numero_serie}). Motivo: {motivo.nombre}."
                 ),
             )
             messages.success(request, "La baja se registró correctamente.")
@@ -148,6 +262,8 @@ def equipo_baja(request, pk):
     context = {
         "equipo": equipo,
         "tipos_baja": BajaEquipo.TipoBaja.choices,
+        "motivos": motivos,
+        "form_data": form_data,
     }
     return render(request, "equipos/baja_form.html", context)
 
@@ -158,11 +274,31 @@ def bajas_list(request):
         return render(request, "403.html", status=403)
 
     bajas = (
-        BajaEquipo.objects.select_related("equipo")
+        BajaEquipo.objects.select_related("equipo", "motivo", "usuario")
         .order_by("-fecha_baja")
     )
+    fecha_desde = parse_date(request.GET.get("fecha_desde") or "")
+    fecha_hasta = parse_date(request.GET.get("fecha_hasta") or "")
+    motivo_id = request.GET.get("motivo")
+    if fecha_desde:
+        bajas = bajas.filter(fecha_baja__date__gte=fecha_desde)
+    if fecha_hasta:
+        bajas = bajas.filter(fecha_baja__date__lte=fecha_hasta)
+    if motivo_id:
+        bajas = bajas.filter(motivo_id=motivo_id)
+
+    if request.GET.get("export") == "1":
+        return _export_bajas_csv(bajas)
+
     context = {
         "bajas": bajas,
+        "motivos": MotivoBaja.objects.order_by("nombre"),
+        "filtros": {
+            "fecha_desde": request.GET.get("fecha_desde") or "",
+            "fecha_hasta": request.GET.get("fecha_hasta") or "",
+            "motivo": motivo_id or "",
+        },
+        "export_query": _build_querystring(request, extra={"export": "1"}),
     }
     return render(request, "bajas/list.html", context)
 
@@ -642,6 +778,38 @@ def _export_inventario_activo_csv(equipos):
                 equipo.sistema_operativo or "",
                 equipo.tipo_equipo or "",
                 equipo.modelo or "",
+            ]
+        )
+    return response
+
+
+def _export_bajas_csv(bajas):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="bajas_equipos.csv"'
+    writer = csv.writer(response)
+    writer.writerow(
+        [
+            "Identificador",
+            "Inventario",
+            "Serie",
+            "Tipo de baja",
+            "Motivo",
+            "Fecha",
+            "Usuario",
+            "Comentarios",
+        ]
+    )
+    for baja in bajas:
+        writer.writerow(
+            [
+                baja.equipo.identificador,
+                baja.equipo.numero_inventario,
+                baja.equipo.numero_serie,
+                baja.get_tipo_baja_display(),
+                baja.motivo.nombre if baja.motivo else "",
+                baja.fecha_baja.strftime("%Y-%m-%d %H:%M"),
+                baja.usuario.get_username() if baja.usuario else "",
+                baja.comentarios or "",
             ]
         )
     return response
