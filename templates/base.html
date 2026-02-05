@@ -21,7 +21,7 @@
                         <a class="nav-link text-white px-2" href="/equipos/">Equipos</a>
                         <a class="nav-link text-white px-2" href="/bajas/">Bajas</a>
                         <a class="nav-link text-white px-2" href="/reportes/">Reportes</a>
-                        {% if user.groups.filter(name="ADMIN").exists or user.groups.filter(name="SOPORTE").exists %}
+                        {% if user.is_superuser %}
                             <a class="nav-link text-white px-2" href="/importar">Importar</a>
                         {% endif %}
                         <a class="nav-link text-white px-2" href="/admin/">Admin</a>
