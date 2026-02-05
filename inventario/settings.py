@@ -90,6 +90,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+CSV_INVENTARIO_PATH = BASE_DIR / 'data' / 'computadoras9.csv'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'login'
