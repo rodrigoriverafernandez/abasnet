@@ -158,6 +158,11 @@ def importar_inventario(request):
                         )
                         tipo_equipo = _get_or_create_catalog(TipoEquipo, _get_row_value(row, 'Tipo de equipos*'))
                         modelo = _get_or_create_catalog(ModeloEquipo, _get_row_value(row, 'Modelo*'))
+                        codigo_postal = _normalize_value(_get_row_value(row, 'Codigo Postal'))
+                        domicilio = _normalize_value(_get_row_value(row, 'Domicilio'))
+                        antiguedad = _normalize_value(_get_row_value(row, 'Antiguedad'))
+                        rpe_responsable = _normalize_value(_get_row_value(row, 'RPE'))
+                        nombre_responsable = _normalize_value(_get_row_value(row, 'Nombre Responsable'))
 
                         equipo_existente = Equipo.objects.filter(identificador=identificador).first()
                         if equipo_existente and modo == 'create_only':
@@ -177,6 +182,11 @@ def importar_inventario(request):
                             'sistema_operativo': sistema_operativo,
                             'tipo_equipo': tipo_equipo,
                             'modelo': modelo,
+                            'codigo_postal': codigo_postal or None,
+                            'domicilio': domicilio or None,
+                            'antiguedad': antiguedad or None,
+                            'rpe_responsable': rpe_responsable or None,
+                            'nombre_responsable': nombre_responsable or None,
                         }
                         if equipo_existente:
                             for campo, valor in defaults.items():

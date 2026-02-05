@@ -86,6 +86,11 @@ class Equipo(models.Model):
     is_baja = models.BooleanField(default=False)
     fecha_baja = models.DateTimeField(null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
+    codigo_postal = models.CharField(max_length=10, blank=True, null=True)
+    domicilio = models.CharField(max_length=255, blank=True, null=True)
+    antiguedad = models.CharField(max_length=50, blank=True, null=True)
+    rpe_responsable = models.CharField(max_length=15, blank=True, null=True)
+    nombre_responsable = models.CharField(max_length=150, blank=True, null=True)
 
     def __str__(self):
         return f"{self.nombre} ({self.numero_serie})"

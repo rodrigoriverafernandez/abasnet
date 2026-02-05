@@ -51,6 +51,21 @@
             <dt class="col-sm-4">Modelo</dt>
             <dd class="col-sm-8">{{ equipo.modelo|default:"-" }}</dd>
 
+            <dt class="col-sm-4">Domicilio</dt>
+            <dd class="col-sm-8">{{ equipo.domicilio|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Código postal</dt>
+            <dd class="col-sm-8">{{ equipo.codigo_postal|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Antigüedad</dt>
+            <dd class="col-sm-8">{{ equipo.antiguedad|default:"-" }}</dd>
+
+            <dt class="col-sm-4">RPE responsable</dt>
+            <dd class="col-sm-8">{{ equipo.rpe_responsable|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Nombre responsable</dt>
+            <dd class="col-sm-8">{{ equipo.nombre_responsable|default:"-" }}</dd>
+
             <dt class="col-sm-4">Estado</dt>
             <dd class="col-sm-8">
                 {% if equipo.is_baja %}

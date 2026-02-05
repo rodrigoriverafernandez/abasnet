@@ -45,6 +45,9 @@ class EquipoAdmin(admin.ModelAdmin):
         'centro_costo',
         'marca',
         'sistema_operativo',
+        'codigo_postal',
+        'rpe_responsable',
+        'nombre_responsable',
         'activo',
         'is_baja',
         'fecha_baja',
@@ -57,7 +60,17 @@ class EquipoAdmin(admin.ModelAdmin):
         'numero_serie',
         'centro_costo__nombre',
     )
-    list_filter = ('activo', 'is_baja', 'centro_costo', 'marca', 'sistema_operativo', 'tipo_equipo')
+    list_filter = (
+        'activo',
+        'is_baja',
+        'centro_costo',
+        'marca',
+        'sistema_operativo',
+        'tipo_equipo',
+        'codigo_postal',
+        'rpe_responsable',
+        'nombre_responsable',
+    )
 
 
 @admin.register(Marca)
