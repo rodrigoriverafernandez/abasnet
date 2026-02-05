@@ -20,20 +20,54 @@
 {% endif %}
 
 <form method="get" class="mb-3">
-    <div class="form-check">
-        <input
-            class="form-check-input"
-            type="checkbox"
-            value="1"
-            id="include_bajas"
-            name="include_bajas"
-            {% if include_bajas %}checked{% endif %}
-        >
-        <label class="form-check-label" for="include_bajas">
-            Incluir bajas
-        </label>
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label" for="codigo_postal">Código postal</label>
+            <input
+                class="form-control"
+                type="text"
+                id="codigo_postal"
+                name="codigo_postal"
+                value="{{ filtros.codigo_postal }}"
+            >
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="rpe_responsable">RPE responsable</label>
+            <input
+                class="form-control"
+                type="text"
+                id="rpe_responsable"
+                name="rpe_responsable"
+                value="{{ filtros.rpe_responsable }}"
+            >
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="nombre_responsable">Nombre responsable</label>
+            <input
+                class="form-control"
+                type="text"
+                id="nombre_responsable"
+                name="nombre_responsable"
+                value="{{ filtros.nombre_responsable }}"
+            >
+        </div>
+        <div class="col-md-3">
+            <div class="form-check mt-4">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="1"
+                    id="include_bajas"
+                    name="include_bajas"
+                    {% if include_bajas %}checked{% endif %}
+                >
+                <label class="form-check-label" for="include_bajas">
+                    Incluir bajas
+                </label>
+            </div>
+        </div>
     </div>
-    <button type="submit" class="btn btn-sm btn-primary mt-2">Aplicar filtro</button>
+    <button type="submit" class="btn btn-sm btn-primary mt-3">Aplicar filtro</button>
 </form>
 
 <div class="table-responsive">
@@ -45,6 +79,10 @@
                 <th>Serie</th>
                 <th>Centro de costo</th>
                 <th>Marca</th>
+                <th>Domicilio</th>
+                <th>Antigüedad</th>
+                <th>Código postal</th>
+                <th>Responsable</th>
                 <th>Estado</th>
                 <th></th>
             </tr>
@@ -59,6 +97,15 @@
                         {{ equipo.centro_costo.codigo }} - {{ equipo.centro_costo.nombre }}
                     </td>
                     <td>{{ equipo.marca|default:"-" }}</td>
+                    <td>{{ equipo.domicilio|default:"-" }}</td>
+                    <td>{{ equipo.antiguedad|default:"-" }}</td>
+                    <td>{{ equipo.codigo_postal|default:"-" }}</td>
+                    <td>
+                        {{ equipo.rpe_responsable|default:"-" }}
+                        {% if equipo.nombre_responsable %}
+                            <div class="text-muted small">{{ equipo.nombre_responsable }}</div>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if equipo.is_baja %}
                             <span class="badge bg-danger">Baja</span>
@@ -74,7 +121,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted">
+                    <td colspan="11" class="text-center text-muted">
                         No se encontraron equipos con el filtro seleccionado.
                     </td>
                 </tr>

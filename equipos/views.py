@@ -56,6 +56,9 @@ def _build_querystring(request, exclude=None, extra=None):
 @login_required
 def equipos_list(request):
     include_bajas = request.GET.get("include_bajas") == "1"
+    codigo_postal = request.GET.get("codigo_postal", "").strip()
+    rpe_responsable = request.GET.get("rpe_responsable", "").strip()
+    nombre_responsable = request.GET.get("nombre_responsable", "").strip()
     equipos = (
         Equipo.objects.select_related(
             "centro_costo__division__sociedad",
@@ -68,10 +71,21 @@ def equipos_list(request):
     )
     if not include_bajas:
         equipos = equipos.filter(is_baja=False)
+    if codigo_postal:
+        equipos = equipos.filter(codigo_postal__icontains=codigo_postal)
+    if rpe_responsable:
+        equipos = equipos.filter(rpe_responsable__icontains=rpe_responsable)
+    if nombre_responsable:
+        equipos = equipos.filter(nombre_responsable__icontains=nombre_responsable)
 
     context = {
         "equipos": equipos,
         "include_bajas": include_bajas,
+        "filtros": {
+            "codigo_postal": codigo_postal,
+            "rpe_responsable": rpe_responsable,
+            "nombre_responsable": nombre_responsable,
+        },
         "can_baja": _user_can_baja(request.user),
     }
     return render(request, "equipos/list.html", context)
