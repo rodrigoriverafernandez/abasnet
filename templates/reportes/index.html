@@ -27,13 +27,36 @@
     <div class="col-md-4">
         <div class="card h-100 shadow-sm">
             <div class="card-body">
+                <h2 class="h5">Centro de costo</h2>
+                <p class="text-muted small mb-3">
+                    Subtotales de equipos activos por sociedad, división y centro de costo.
+                </p>
+                <a class="btn btn-primary" href="{% url 'reporte_centro_costo' %}">Ver reporte</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Responsables</h2>
+                <p class="text-muted small mb-3">
+                    Concentrado de equipos activos por responsable.
+                </p>
+                <a class="btn btn-primary" href="{% url 'reporte_responsables' %}">Ver reporte</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
                 <h2 class="h5">Equipos en baja</h2>
                 <p class="text-muted small mb-3">
                     Seguimiento de equipos dados de baja por fecha y motivo.
                 </p>
-                <a class="btn btn-primary" href="{% url 'reporte_equipos_baja' %}">
-                    Ver reporte
-                </a>
+                <a class="btn btn-primary" href="{% url 'reporte_bajas' %}">Ver reporte</a>
             </div>
         </div>
     </div>
@@ -44,9 +67,7 @@
                 <p class="text-muted small mb-3">
                     Totales y distribución de inventario para decisiones rápidas.
                 </p>
-                <a class="btn btn-primary" href="{% url 'reporte_resumen' %}">
-                    Ver reporte
-                </a>
+                <a class="btn btn-primary" href="{% url 'reporte_resumen' %}">Ver reporte</a>
             </div>
         </div>
     </div>

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte | Responsables{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Reporte: Responsables</h1>
+        <p class="text-muted mb-0">Concentrado de equipos activos por responsable.</p>
+    </div>
+    {% if can_export %}
+        <a class="btn btn-outline-primary" href="?{{ export_query }}">Exportar CSV</a>
+    {% endif %}
+</div>
+
+<form method="get" class="card card-body mb-4 shadow-sm">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Sociedad</label>
+            <select class="form-select" name="sociedad">
+                <option value="">Todas</option>
+                {% for sociedad_id, codigo, nombre in sociedades %}
+                    {% if sociedad_id %}
+                        <option value="{{ sociedad_id }}" {% if filtros.sociedad == sociedad_id|stringformat:"s" %}selected{% endif %}>
+                            {{ codigo }} - {{ nombre }}
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">División</label>
+            <select class="form-select" name="division">
+                <option value="">Todas</option>
+                {% for division_id, codigo, nombre in divisiones %}
+                    {% if division_id %}
+                        <option value="{{ division_id }}" {% if filtros.division == division_id|stringformat:"s" %}selected{% endif %}>
+                            {{ codigo }} - {{ nombre }}
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Centro de costo</label>
+            <select class="form-select" name="centro_costo">
+                <option value="">Todos</option>
+                {% for centro_id, codigo, nombre in centros_costo %}
+                    {% if centro_id %}
+                        <option value="{{ centro_id }}" {% if filtros.centro_costo == centro_id|stringformat:"s" %}selected{% endif %}>
+                            {{ codigo }} - {{ nombre }}
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Responsable / RPE</label>
+            <input class="form-control" type="text" name="texto" value="{{ filtros.texto }}" placeholder="Nombre o RPE">
+        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+        <a class="btn btn-outline-secondary" href="{% url 'reporte_responsables' %}">Limpiar</a>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Responsable</th>
+                        <th>RPE</th>
+                        <th>Sociedad</th>
+                        <th>División</th>
+                        <th>Centro de costo</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fila in resumen %}
+                        <tr>
+                            <td>{{ fila.nombre_responsable|default:"-" }}</td>
+                            <td>{{ fila.rpe_responsable|default:"-" }}</td>
+                            <td>{{ fila.centro_costo__division__sociedad__codigo }} - {{ fila.centro_costo__division__sociedad__nombre }}</td>
+                            <td>{{ fila.centro_costo__division__codigo }} - {{ fila.centro_costo__division__nombre }}</td>
+                            <td>{{ fila.centro_costo__codigo }} - {{ fila.centro_costo__nombre }}</td>
+                            <td class="text-end">{{ fila.total }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No se encontraron responsables con los filtros seleccionados.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
