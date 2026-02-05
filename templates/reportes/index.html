@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Reportes corporativos</h1>
+        <p class="text-muted mb-0">Consulta de inventario, bajas y resúmenes clave.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Inventario activo</h2>
+                <p class="text-muted small mb-3">
+                    Equipos activos con filtros por sociedad, división, centro de costo y más.
+                </p>
+                <a class="btn btn-primary" href="{% url 'reporte_inventario_activo' %}">
+                    Ver reporte
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Equipos en baja</h2>
+                <p class="text-muted small mb-3">
+                    Seguimiento de equipos dados de baja por fecha y motivo.
+                </p>
+                <a class="btn btn-primary" href="{% url 'reporte_equipos_baja' %}">
+                    Ver reporte
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Resumen ejecutivo</h2>
+                <p class="text-muted small mb-3">
+                    Totales y distribución de inventario para decisiones rápidas.
+                </p>
+                <a class="btn btn-primary" href="{% url 'reporte_resumen' %}">
+                    Ver reporte
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
