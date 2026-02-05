@@ -2,14 +2,32 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 
-from equipos.models import CentroCosto, Division, Equipo, Sociedad
+from equipos.models import (
+    CentroCosto,
+    Division,
+    Equipo,
+    Marca,
+    ModeloEquipo,
+    SistemaOperativo,
+    Sociedad,
+    TipoEquipo,
+)
 
 
 class Command(BaseCommand):
     help = 'Inicializa los grupos y permisos del sistema.'
 
     def handle(self, *args, **options):
-        models = [Sociedad, Division, CentroCosto, Equipo]
+        models = [
+            Sociedad,
+            Division,
+            CentroCosto,
+            Marca,
+            SistemaOperativo,
+            TipoEquipo,
+            ModeloEquipo,
+            Equipo,
+        ]
         content_types = {model: ContentType.objects.get_for_model(model) for model in models}
 
         export_perm, _ = Permission.objects.get_or_create(
@@ -30,7 +48,7 @@ class Command(BaseCommand):
         soporte_permissions = []
         for model in models:
             base_codenames = ['view', 'add', 'change']
-            if model in (Sociedad, Division, CentroCosto):
+            if model in (Sociedad, Division, CentroCosto, Marca, SistemaOperativo, TipoEquipo, ModeloEquipo):
                 base_codenames.append('delete')
             soporte_permissions.extend(
                 Permission.objects.filter(
