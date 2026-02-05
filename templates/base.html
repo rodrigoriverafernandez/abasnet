@@ -14,17 +14,30 @@
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">Inventario</a>
-            <div class="d-flex align-items-center gap-3 text-white">
+            <div class="d-flex align-items-center gap-3 w-100">
+                <a class="navbar-brand" href="#">Inventario</a>
                 {% if user.is_authenticated %}
-                    <span class="small">Usuario: {{ user.get_username }}</span>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
-                    </form>
-                {% else %}
-                    <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Iniciar sesión</a>
+                    <div class="d-flex flex-wrap gap-2 align-items-center text-white">
+                        <a class="nav-link text-white px-2" href="/equipos/">Equipos</a>
+                        <a class="nav-link text-white px-2" href="/bajas/">Bajas</a>
+                        <a class="nav-link text-white px-2" href="/reportes/">Reportes</a>
+                        {% if user.groups.filter(name="ADMIN").exists or user.groups.filter(name="SOPORTE").exists %}
+                            <a class="nav-link text-white px-2" href="/importar">Importar</a>
+                        {% endif %}
+                        <a class="nav-link text-white px-2" href="/admin/">Admin</a>
+                    </div>
                 {% endif %}
+                <div class="ms-auto d-flex align-items-center gap-3 text-white">
+                    {% if user.is_authenticated %}
+                        <span class="small">Usuario: {{ user.get_username }}</span>
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+                        </form>
+                    {% else %}
+                        <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Iniciar sesión</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
