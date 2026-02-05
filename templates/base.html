@@ -15,9 +15,30 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">Inventario</a>
+            <div class="d-flex align-items-center gap-3 text-white">
+                {% if user.is_authenticated %}
+                    <span class="small">Usuario: {{ user.get_username }}</span>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+                    </form>
+                {% else %}
+                    <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Iniciar sesión</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
     <main class="container py-4">
+        {% if user.is_authenticated %}
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% if perms.equipos.add_equipo %}
+                    <a class="btn btn-primary" href="/admin/equipos/equipo/add/">Nuevo equipo</a>
+                {% endif %}
+                {% if perms.equipos.change_equipo %}
+                    <a class="btn btn-outline-secondary" href="/admin/equipos/equipo/">Editar equipos</a>
+                {% endif %}
+            </div>
+        {% endif %}
         {% block content %}
         {% endblock %}
     </main>
