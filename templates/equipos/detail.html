@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de equipo{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">{{ equipo.nombre }}</h1>
+        <p class="text-muted mb-0">Identificador: {{ equipo.identificador }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'equipos_list' %}">Volver</a>
+        {% if can_baja and not equipo.is_baja %}
+            <a class="btn btn-danger" href="{% url 'equipo_baja' equipo.pk %}">Dar de baja</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Número de serie</dt>
+            <dd class="col-sm-8">{{ equipo.numero_serie }}</dd>
+
+            <dt class="col-sm-4">Centro de costo</dt>
+            <dd class="col-sm-8">
+                {{ equipo.centro_costo.codigo }} - {{ equipo.centro_costo.nombre }}
+            </dd>
+
+            <dt class="col-sm-4">División</dt>
+            <dd class="col-sm-8">{{ equipo.centro_costo.division.nombre }}</dd>
+
+            <dt class="col-sm-4">Sociedad</dt>
+            <dd class="col-sm-8">{{ equipo.centro_costo.division.sociedad.nombre }}</dd>
+
+            <dt class="col-sm-4">Marca</dt>
+            <dd class="col-sm-8">{{ equipo.marca|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Sistema operativo</dt>
+            <dd class="col-sm-8">{{ equipo.sistema_operativo|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Tipo de equipo</dt>
+            <dd class="col-sm-8">{{ equipo.tipo_equipo|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Modelo</dt>
+            <dd class="col-sm-8">{{ equipo.modelo|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Estado</dt>
+            <dd class="col-sm-8">
+                {% if equipo.is_baja %}
+                    <span class="badge bg-danger">Baja</span>
+                    {% if equipo.fecha_baja %}
+                        <span class="text-muted ms-2">{{ equipo.fecha_baja|date:"d/m/Y H:i" }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge bg-success">Activo</span>
+                {% endif %}
+            </dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}

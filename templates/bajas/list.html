@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Bajas registradas{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Bajas registradas</h1>
+        <p class="text-muted mb-0">Historial de equipos dados de baja.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'equipos_list' %}">Volver a equipos</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Equipo</th>
+                <th>Serie</th>
+                <th>Tipo de baja</th>
+                <th>Fecha</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for baja in bajas %}
+                <tr>
+                    <td>{{ baja.equipo.identificador }}</td>
+                    <td>{{ baja.equipo.numero_serie }}</td>
+                    <td>{{ baja.get_tipo_baja_display }}</td>
+                    <td>{{ baja.fecha_baja|date:"d/m/Y H:i" }}</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'equipo_detail' baja.equipo.pk %}">
+                            Ver equipo
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        No hay bajas registradas.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

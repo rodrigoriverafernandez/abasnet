@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Equipos{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Equipos</h1>
+        <p class="text-muted mb-0">Listado de equipos registrados en inventario.</p>
+    </div>
+    {% if can_baja %}
+        <a class="btn btn-outline-primary" href="{% url 'bajas_list' %}">Ver bajas</a>
+    {% endif %}
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<form method="get" class="mb-3">
+    <div class="form-check">
+        <input
+            class="form-check-input"
+            type="checkbox"
+            value="1"
+            id="include_bajas"
+            name="include_bajas"
+            {% if include_bajas %}checked{% endif %}
+        >
+        <label class="form-check-label" for="include_bajas">
+            Incluir bajas
+        </label>
+    </div>
+    <button type="submit" class="btn btn-sm btn-primary mt-2">Aplicar filtro</button>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Identificador</th>
+                <th>Nombre</th>
+                <th>Serie</th>
+                <th>Centro de costo</th>
+                <th>Marca</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for equipo in equipos %}
+                <tr>
+                    <td>{{ equipo.identificador }}</td>
+                    <td>{{ equipo.nombre }}</td>
+                    <td>{{ equipo.numero_serie }}</td>
+                    <td>
+                        {{ equipo.centro_costo.codigo }} - {{ equipo.centro_costo.nombre }}
+                    </td>
+                    <td>{{ equipo.marca|default:"-" }}</td>
+                    <td>
+                        {% if equipo.is_baja %}
+                            <span class="badge bg-danger">Baja</span>
+                        {% else %}
+                            <span class="badge bg-success">Activo</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'equipo_detail' equipo.pk %}">
+                            Ver detalle
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        No se encontraron equipos con el filtro seleccionado.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
