@@ -1,14 +1,12 @@
 """inventario URL Configuration."""
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.contrib.auth.decorators import login_required
 from django.urls import include, path
-from django.views.generic import TemplateView
 
 from inventario import views
 
 urlpatterns = [
-    path('', login_required(TemplateView.as_view(template_name='base.html')), name='inicio'),
+    path('', views.inicio_dashboard, name='inicio'),
     path('importar', views.importar_inventario, name='importar'),
     path('', include('equipos.urls')),
     path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
