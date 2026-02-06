@@ -125,6 +125,7 @@ class Equipo(models.Model):
             usuario=usuario,
             accion="BAJA_EQUIPO",
             resumen=resumen,
+            equipo=self,
         )
 
 
@@ -148,6 +149,13 @@ class AuditLog(models.Model):
     usuario = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
     accion = models.CharField(max_length=50)
     resumen = models.TextField()
+    equipo = models.ForeignKey(
+        "Equipo",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_logs",
+    )
 
     def __str__(self):
         return f"{self.accion} {self.fecha:%Y-%m-%d %H:%M}"

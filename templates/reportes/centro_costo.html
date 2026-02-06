@@ -9,7 +9,10 @@
         <p class="text-muted mb-0">Subtotales de equipos activos por sociedad, división y centro de costo.</p>
     </div>
     {% if can_export %}
-        <a class="btn btn-outline-primary" href="?{{ export_query }}">Exportar CSV</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" href="?{{ export_csv_query }}">Exportar CSV</a>
+            <a class="btn btn-outline-success" href="?{{ export_xlsx_query }}">Exportar XLSX</a>
+        </div>
     {% endif %}
 </div>
 
@@ -58,18 +61,20 @@
                         <th>División</th>
                         <th>Centro de costo</th>
                         <th class="text-end">Total</th>
+                        <th class="text-end">% Activos</th>
+                        <th class="text-end">% Bajas</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for fila in resumen %}
                         {% if fila.tipo == "sociedad_header" %}
                             <tr class="table-primary">
-                                <td colspan="4"><strong>Sociedad {{ fila.sociedad_codigo }} - {{ fila.sociedad_nombre }}</strong></td>
+                                <td colspan="6"><strong>Sociedad {{ fila.sociedad_codigo }} - {{ fila.sociedad_nombre }}</strong></td>
                             </tr>
                         {% elif fila.tipo == "division_header" %}
                             <tr class="table-secondary">
                                 <td></td>
-                                <td colspan="3"><strong>División {{ fila.division_codigo }} - {{ fila.division_nombre }}</strong></td>
+                                <td colspan="5"><strong>División {{ fila.division_codigo }} - {{ fila.division_nombre }}</strong></td>
                             </tr>
                         {% elif fila.tipo == "centro_costo" %}
                             <tr>
@@ -77,22 +82,28 @@
                                 <td></td>
                                 <td>{{ fila.centro_codigo }} - {{ fila.centro_nombre }}</td>
                                 <td class="text-end">{{ fila.total }}</td>
+                                <td class="text-end">{{ fila.pct_activos|floatformat:1 }}%</td>
+                                <td class="text-end">{{ fila.pct_bajas|floatformat:1 }}%</td>
                             </tr>
                         {% elif fila.tipo == "division_subtotal" %}
                             <tr class="table-light">
                                 <td></td>
                                 <td colspan="2"><strong>Subtotal división</strong></td>
                                 <td class="text-end"><strong>{{ fila.total }}</strong></td>
+                                <td class="text-end"><strong>{{ fila.pct_activos|floatformat:1 }}%</strong></td>
+                                <td class="text-end"><strong>{{ fila.pct_bajas|floatformat:1 }}%</strong></td>
                             </tr>
                         {% elif fila.tipo == "sociedad_subtotal" %}
                             <tr class="table-light">
                                 <td colspan="3"><strong>Subtotal sociedad</strong></td>
                                 <td class="text-end"><strong>{{ fila.total }}</strong></td>
+                                <td class="text-end"><strong>{{ fila.pct_activos|floatformat:1 }}%</strong></td>
+                                <td class="text-end"><strong>{{ fila.pct_bajas|floatformat:1 }}%</strong></td>
                             </tr>
                         {% endif %}
                     {% empty %}
                         <tr>
-                            <td colspan="4" class="text-center text-muted py-4">
+                            <td colspan="6" class="text-center text-muted py-4">
                                 No se encontraron centros de costo con los filtros seleccionados.
                             </td>
                         </tr>
