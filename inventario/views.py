@@ -71,6 +71,16 @@ def _get_or_create_catalog(model, value):
     return obj
 
 
+def _parse_boolean(value):
+    cleaned = _normalize_value(value)
+    if not cleaned:
+        return False
+    normalized = ''.join(
+        char for char in unicodedata.normalize('NFKD', cleaned) if not unicodedata.combining(char)
+    ).lower()
+    return normalized in {"si", "sí", "s", "true", "1", "x", "yes"}
+
+
 def permission_denied(request, exception=None):
     return render(request, '403.html', status=403)
 
@@ -86,6 +96,7 @@ def _build_dashboard_context(request):
     total_equipos = Equipo.objects.count()
     total_bajas = Equipo.objects.filter(is_baja=True).count()
     total_activos = Equipo.objects.filter(is_baja=False).count()
+    total_criticos = Equipo.objects.filter(infraestructura_critica=True).count()
     porcentaje_bajas = round((total_bajas / total_equipos) * 100, 2) if total_equipos else 0
 
     responsables_unicos = (
@@ -160,6 +171,7 @@ def _build_dashboard_context(request):
         "total_equipos": total_equipos,
         "total_activos": total_activos,
         "total_bajas": total_bajas,
+        "total_criticos": total_criticos,
         "porcentaje_bajas": porcentaje_bajas,
         "responsables_unicos": responsables_unicos,
         "centros_unicos": centros_unicos,
@@ -303,6 +315,9 @@ def importar_inventario(request):
                         nombre_responsable = _normalize_value(
                             _get_row_value_by_headers(row, ['Nombre de Responsable'])
                         )
+                        infraestructura_critica = _parse_boolean(
+                            _get_row_value_by_headers(row, ['Es infraestructura crítica?', 'Es infraestructura critica?'])
+                        )
 
                         equipo_existente = Equipo.objects.filter(identificador=identificador).first()
                         if equipo_existente and modo == 'create_only':
@@ -327,6 +342,7 @@ def importar_inventario(request):
                             'antiguedad': antiguedad or None,
                             'rpe_responsable': rpe_responsable or None,
                             'nombre_responsable': nombre_responsable or None,
+                            'infraestructura_critica': infraestructura_critica,
                         }
                         if equipo_existente:
                             for campo, valor in defaults.items():
