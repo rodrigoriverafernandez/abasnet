@@ -96,6 +96,7 @@ class Equipo(models.Model):
     antiguedad = models.CharField(max_length=50, blank=True, null=True)
     rpe_responsable = models.CharField(max_length=15, blank=True, null=True)
     nombre_responsable = models.CharField(max_length=150, blank=True, null=True)
+    infraestructura_critica = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.nombre} ({self.numero_serie})"
