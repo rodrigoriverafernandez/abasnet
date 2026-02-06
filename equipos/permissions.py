@@ -16,7 +16,11 @@ def can_baja(user):
 
 
 def can_edit(user):
-    return _user_in_groups(user, ALLOWED_BAJA_GROUPS)
+    if _user_in_groups(user, ALLOWED_BAJA_GROUPS):
+        return True
+    if not user.is_authenticated:
+        return False
+    return user.has_perm("equipos.change_equipo")
 
 
 def can_audit(user):
