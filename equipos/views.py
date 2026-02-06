@@ -831,7 +831,7 @@ def reporte_resumen(request):
 
 
 @login_required
-def equipo_edit(request, pk):
+def equipo_editar(request, pk):
     if not can_edit(request.user):
         return render(request, "403.html", status=403)
 
@@ -853,49 +853,41 @@ def equipo_edit(request, pk):
     centros_costo = CentroCosto.objects.values_list("id", "codigo", "nombre").order_by("codigo")
 
     form_data = {
-        "numero_inventario": equipo.numero_inventario or "",
-        "numero_serie": equipo.numero_serie or "",
-        "marca": str(equipo.marca_id or ""),
-        "modelo": str(equipo.modelo_id or ""),
-        "sistema_operativo": str(equipo.sistema_operativo_id or ""),
-        "tipo_equipo": str(equipo.tipo_equipo_id or ""),
-        "direccion_ip": equipo.direccion_ip or "",
-        "direccion_mac": equipo.direccion_mac or "",
         "domicilio": equipo.domicilio or "",
         "codigo_postal": equipo.codigo_postal or "",
         "antiguedad": equipo.antiguedad or "",
         "rpe_responsable": equipo.rpe_responsable or "",
         "nombre_responsable": equipo.nombre_responsable or "",
+        "direccion_ip": equipo.direccion_ip or "",
+        "direccion_mac": equipo.direccion_mac or "",
+        "sistema_operativo": str(equipo.sistema_operativo_id or ""),
+        "marca": str(equipo.marca_id or ""),
+        "modelo": str(equipo.modelo_id or ""),
+        "tipo_equipo": str(equipo.tipo_equipo_id or ""),
         "centro_costo": str(equipo.centro_costo_id or ""),
+        "municipio": equipo.municipio or "",
+        "entidad": equipo.entidad or "",
     }
 
     if request.method == "POST":
         form_data = {
-            "numero_inventario": request.POST.get("numero_inventario", "").strip(),
-            "numero_serie": request.POST.get("numero_serie", "").strip(),
-            "marca": request.POST.get("marca", ""),
-            "modelo": request.POST.get("modelo", ""),
-            "sistema_operativo": request.POST.get("sistema_operativo", ""),
-            "tipo_equipo": request.POST.get("tipo_equipo", ""),
-            "direccion_ip": request.POST.get("direccion_ip", "").strip(),
-            "direccion_mac": request.POST.get("direccion_mac", "").strip(),
             "domicilio": request.POST.get("domicilio", "").strip(),
             "codigo_postal": request.POST.get("codigo_postal", "").strip(),
             "antiguedad": request.POST.get("antiguedad", "").strip(),
             "rpe_responsable": request.POST.get("rpe_responsable", "").strip(),
             "nombre_responsable": request.POST.get("nombre_responsable", "").strip(),
+            "direccion_ip": request.POST.get("direccion_ip", "").strip(),
+            "direccion_mac": request.POST.get("direccion_mac", "").strip(),
+            "sistema_operativo": request.POST.get("sistema_operativo", ""),
+            "marca": request.POST.get("marca", ""),
+            "modelo": request.POST.get("modelo", ""),
+            "tipo_equipo": request.POST.get("tipo_equipo", ""),
             "centro_costo": request.POST.get("centro_costo", ""),
+            "municipio": request.POST.get("municipio", "").strip(),
+            "entidad": request.POST.get("entidad", "").strip(),
         }
 
         errors = []
-        if not form_data["numero_serie"]:
-            errors.append("El número de serie es obligatorio.")
-        elif (
-            Equipo.objects.exclude(pk=equipo.pk)
-            .filter(numero_serie=form_data["numero_serie"])
-            .exists()
-        ):
-            errors.append("El número de serie ya está registrado en otro equipo.")
         if form_data["direccion_ip"] and not IP_REGEX.match(form_data["direccion_ip"]):
             errors.append("La dirección IP no tiene un formato válido.")
         if form_data["direccion_mac"] and not MAC_REGEX.match(form_data["direccion_mac"]):
@@ -923,11 +915,11 @@ def equipo_edit(request, pk):
                 messages.error(request, error)
         else:
             original = {
-                "numero_inventario": equipo.numero_inventario or "",
-                "numero_serie": equipo.numero_serie or "",
                 "marca": equipo.marca.nombre if equipo.marca else "",
                 "modelo": equipo.modelo.nombre if equipo.modelo else "",
-                "sistema_operativo": equipo.sistema_operativo.nombre if equipo.sistema_operativo else "",
+                "sistema_operativo": equipo.sistema_operativo.nombre
+                if equipo.sistema_operativo
+                else "",
                 "tipo_equipo": equipo.tipo_equipo.nombre if equipo.tipo_equipo else "",
                 "direccion_ip": equipo.direccion_ip or "",
                 "direccion_mac": equipo.direccion_mac or "",
@@ -939,10 +931,10 @@ def equipo_edit(request, pk):
                 "centro_costo": (
                     f"{equipo.centro_costo.codigo} - {equipo.centro_costo.nombre}"
                 ),
+                "municipio": equipo.municipio or "",
+                "entidad": equipo.entidad or "",
             }
 
-            equipo.numero_inventario = form_data["numero_inventario"]
-            equipo.numero_serie = form_data["numero_serie"]
             equipo.direccion_ip = form_data["direccion_ip"] or None
             equipo.direccion_mac = form_data["direccion_mac"] or None
             equipo.domicilio = form_data["domicilio"] or None
@@ -955,15 +947,17 @@ def equipo_edit(request, pk):
             equipo.modelo_id = form_data["modelo"] or None
             equipo.sistema_operativo_id = form_data["sistema_operativo"] or None
             equipo.tipo_equipo_id = form_data["tipo_equipo"] or None
+            equipo.municipio = form_data["municipio"] or None
+            equipo.entidad = form_data["entidad"] or None
 
             equipo.save()
 
             updated = {
-                "numero_inventario": equipo.numero_inventario or "",
-                "numero_serie": equipo.numero_serie or "",
                 "marca": equipo.marca.nombre if equipo.marca else "",
                 "modelo": equipo.modelo.nombre if equipo.modelo else "",
-                "sistema_operativo": equipo.sistema_operativo.nombre if equipo.sistema_operativo else "",
+                "sistema_operativo": equipo.sistema_operativo.nombre
+                if equipo.sistema_operativo
+                else "",
                 "tipo_equipo": equipo.tipo_equipo.nombre if equipo.tipo_equipo else "",
                 "direccion_ip": equipo.direccion_ip or "",
                 "direccion_mac": equipo.direccion_mac or "",
@@ -975,11 +969,11 @@ def equipo_edit(request, pk):
                 "centro_costo": (
                     f"{equipo.centro_costo.codigo} - {equipo.centro_costo.nombre}"
                 ),
+                "municipio": equipo.municipio or "",
+                "entidad": equipo.entidad or "",
             }
 
             labels = {
-                "numero_inventario": "Inventario",
-                "numero_serie": "Serie",
                 "marca": "Marca",
                 "modelo": "Modelo",
                 "sistema_operativo": "SO",
@@ -992,6 +986,8 @@ def equipo_edit(request, pk):
                 "rpe_responsable": "RPE responsable",
                 "nombre_responsable": "Nombre responsable",
                 "centro_costo": "Centro de costo",
+                "municipio": "Municipio",
+                "entidad": "Entidad",
             }
             cambios = []
             for key, label in labels.items():
@@ -1021,7 +1017,7 @@ def equipo_edit(request, pk):
         "tipos_equipo": tipos_equipo,
         "centros_costo": centros_costo,
     }
-    return render(request, "equipos/edit.html", context)
+    return render(request, "equipos/editar.html", context)
 
 
 @login_required
@@ -1086,6 +1082,9 @@ def auditoria_list(request):
     if request.GET.get("export") == "1":
         return _export_auditoria_csv(registros)
 
+    paginator = Paginator(registros, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
     acciones_set = set(audit_logs.values_list("accion", flat=True))
     if import_logs.exists():
         acciones_set.add("IMPORT")
@@ -1099,7 +1098,8 @@ def auditoria_list(request):
     usuarios = usuarios.distinct().order_by("username")
 
     context = {
-        "registros": registros,
+        "registros": page_obj,
+        "page_obj": page_obj,
         "usuarios": usuarios,
         "acciones": acciones_disponibles,
         "filtros": {
@@ -1109,6 +1109,7 @@ def auditoria_list(request):
             "accion": accion or "",
         },
         "export_query": _build_querystring(request, extra={"export": "1"}),
+        "pagination_query": _build_querystring(request, exclude={"page"}),
     }
     return render(request, "auditoria/list.html", context)
 

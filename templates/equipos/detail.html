@@ -11,7 +11,7 @@
     <div class="d-flex gap-2">
         <a class="btn btn-outline-secondary" href="{% url 'equipos_list' %}">Volver</a>
         {% if can_edit %}
-            <a class="btn btn-primary" href="{% url 'equipo_edit' equipo.pk %}">Editar</a>
+            <a class="btn btn-primary" href="{% url 'equipo_editar' equipo.pk %}">Editar</a>
         {% endif %}
         {% if can_baja and not equipo.is_baja %}
             <a class="btn btn-danger" href="{% url 'equipo_baja' equipo.pk %}">Dar de baja</a>
