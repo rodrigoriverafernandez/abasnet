@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3 fw-semibold">Dashboard – Inventario de Equipo de Cómputo</h1>
+    <p class="text-muted mb-0">
+        {{ fecha_actual|date:"d/m/Y H:i" }} · {{ user.get_username }}
+    </p>
+</div>
+
+<section class="mb-5">
+    <div class="row g-3">
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Total equipos</p>
+                    <h3 class="fw-semibold mb-0">{{ total_equipos }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Activos</p>
+                    <h3 class="fw-semibold mb-0">{{ total_activos }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">En baja</p>
+                    <h3 class="fw-semibold mb-0">{{ total_bajas }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">% de bajas</p>
+                    <h3 class="fw-semibold mb-0">{{ porcentaje_bajas }}%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Responsables únicos</p>
+                    <h3 class="fw-semibold mb-0">{{ responsables_unicos }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Centros de costo únicos</p>
+                    <h3 class="fw-semibold mb-0">{{ centros_unicos }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="row g-4">
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Activos vs Bajas</h5>
+                    {% if chart_activos_bajas_total %}
+                        <canvas id="chartActivosBajas" height="220"></canvas>
+                    {% else %}
+                        <p class="text-muted mb-0">Sin datos para graficar</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Top 10 Centros de Costo</h5>
+                    {% if centros_has_data %}
+                        <canvas id="chartCentros" height="220"></canvas>
+                    {% else %}
+                        <p class="text-muted mb-0">Sin datos para graficar</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Top 10 Marcas</h5>
+                    {% if marcas_has_data %}
+                        <canvas id="chartMarcas" height="220"></canvas>
+                    {% else %}
+                        <p class="text-muted mb-0">Sin datos para graficar</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Top 10 Sistemas Operativos</h5>
+                    {% if sistemas_has_data %}
+                        <canvas id="chartSistemas" height="220"></canvas>
+                    {% else %}
+                        <p class="text-muted mb-0">Sin datos para graficar</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <h4 class="mb-3">Accesos rápidos</h4>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'equipos_list' %}">Equipos</a>
+        {% if can_import %}
+            <a class="btn btn-outline-primary" href="{% url 'importar' %}">Importar</a>
+        {% endif %}
+        {% if can_baja %}
+            <a class="btn btn-outline-primary" href="{% url 'bajas_list' %}">Bajas</a>
+        {% endif %}
+        {% if can_view_report %}
+            <a class="btn btn-outline-primary" href="{% url 'reportes_home' %}">Reportes</a>
+        {% endif %}
+        {% if can_audit %}
+            <a class="btn btn-outline-primary" href="{% url 'auditoria_list' %}">Auditoría</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="mb-4">
+    <h4 class="mb-3">Actividad reciente</h4>
+    <div class="row g-4">
+        {% if mostrar_import_logs %}
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Últimas 5 importaciones</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Usuario</th>
+                                        <th>Creados</th>
+                                        <th>Actualizados</th>
+                                        <th>Errores</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in import_logs %}
+                                        <tr>
+                                            <td>{{ log.fecha|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ log.usuario.get_username|default:"-" }}</td>
+                                            <td>{{ log.creados }}</td>
+                                            <td>{{ log.actualizados }}</td>
+                                            <td>{{ log.errores }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-muted">Sin registros recientes.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if mostrar_bajas %}
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Últimas 10 bajas</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Equipo</th>
+                                        <th>Tipo</th>
+                                        <th>Usuario</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for baja in bajas_recientes %}
+                                        <tr>
+                                            <td>{{ baja.fecha_baja|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ baja.equipo.identificador }}</td>
+                                            <td>{{ baja.get_tipo_baja_display }}</td>
+                                            <td>{{ baja.usuario.get_username|default:"-" }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-muted">Sin registros recientes.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if mostrar_audit_logs %}
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Últimas 10 auditorías</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Acción</th>
+                                        <th>Entidad</th>
+                                        <th>Usuario</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for audit in audit_logs %}
+                                        <tr>
+                                            <td>{{ audit.fecha|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ audit.accion }}</td>
+                                            <td>{{ audit.equipo.identificador|default:"-" }}</td>
+                                            <td>{{ audit.usuario.get_username|default:"-" }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-muted">Sin registros recientes.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    const chartActivosBajasEl = document.getElementById("chartActivosBajas");
+    if (chartActivosBajasEl) {
+        new Chart(chartActivosBajasEl, {
+            type: "doughnut",
+            data: {
+                labels: {{ chart_activos_bajas_labels|safe }},
+                datasets: [{
+                    data: {{ chart_activos_bajas|safe }},
+                    backgroundColor: ["#1d4ed8", "#94a3b8"],
+                }],
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                    },
+                },
+            },
+        });
+    }
+
+    const chartCentrosEl = document.getElementById("chartCentros");
+    if (chartCentrosEl) {
+        new Chart(chartCentrosEl, {
+            type: "bar",
+            data: {
+                labels: {{ chart_centros_labels|safe }},
+                datasets: [{
+                    label: "Equipos",
+                    data: {{ chart_centros_data|safe }},
+                    backgroundColor: "#1f2937",
+                }],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                },
+                scales: {
+                    x: { ticks: { autoSkip: false } },
+                },
+            },
+        });
+    }
+
+    const chartMarcasEl = document.getElementById("chartMarcas");
+    if (chartMarcasEl) {
+        new Chart(chartMarcasEl, {
+            type: "bar",
+            data: {
+                labels: {{ chart_marcas_labels|safe }},
+                datasets: [{
+                    label: "Equipos",
+                    data: {{ chart_marcas_data|safe }},
+                    backgroundColor: "#0f766e",
+                }],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                },
+            },
+        });
+    }
+
+    const chartSistemasEl = document.getElementById("chartSistemas");
+    if (chartSistemasEl) {
+        new Chart(chartSistemasEl, {
+            type: "bar",
+            data: {
+                labels: {{ chart_sistemas_labels|safe }},
+                datasets: [{
+                    label: "Equipos",
+                    data: {{ chart_sistemas_data|safe }},
+                    backgroundColor: "#334155",
+                }],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                },
+            },
+        });
+    }
+</script>
+{% endblock %}

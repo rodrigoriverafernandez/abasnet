@@ -15,9 +15,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <div class="d-flex align-items-center gap-3 w-100">
-                <a class="navbar-brand" href="#">Inventario</a>
+                <a class="navbar-brand" href="{% url 'inicio' %}">Inventario</a>
                 {% if user.is_authenticated %}
                     <div class="d-flex flex-wrap gap-2 align-items-center text-white">
+                        <a class="nav-link text-white px-2" href="{% url 'inicio' %}">Inicio</a>
                         <a class="nav-link text-white px-2" href="{% url 'equipos_list' %}">Equipos</a>
                         {% if can_import %}
                             <a class="nav-link text-white px-2" href="{% url 'importar' %}">Importar</a>
