@@ -188,6 +188,11 @@
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'equipo_detail' equipo.pk %}">
                             Ver detalle
                         </a>
+                        {% if can_edit %}
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'equipo_editar' equipo.pk %}">
+                                Editar
+                            </a>
+                        {% endif %}
                     </td>
                 </tr>
             {% empty %}

@@ -171,6 +171,7 @@ def equipos_list(request):
         },
         "pagination_query": _build_querystring(request, exclude={"page"}),
         "can_baja": can_baja(request.user),
+        "can_edit": can_edit(request.user),
     }
     return render(request, "equipos/list.html", context)
 
