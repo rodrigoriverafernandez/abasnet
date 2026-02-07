@@ -30,6 +30,7 @@ from .permissions import (
     can_audit,
     can_baja,
     can_edit,
+    can_import,
     can_view_report,
 )
 
@@ -51,7 +52,6 @@ def _build_querystring(request, exclude=None, extra=None):
 
 @login_required
 def equipos_list(request):
-    include_bajas = request.GET.get("include_bajas") == "1"
     texto = request.GET.get("texto", "").strip()
     sociedad_id = request.GET.get("sociedad")
     division_id = request.GET.get("division")
@@ -61,6 +61,11 @@ def equipos_list(request):
     tipo_equipo_id = request.GET.get("tipo_equipo")
     entidad = request.GET.get("entidad", "").strip()
     municipio = request.GET.get("municipio", "").strip()
+    estado = request.GET.get("estado", "").strip()
+    critico = request.GET.get("critico", "").strip()
+    include_bajas = request.GET.get("include_bajas") == "1"
+    if include_bajas and not estado:
+        estado = ""
     equipos = (
         Equipo.objects.select_related(
             "centro_costo__division__sociedad",
@@ -71,7 +76,11 @@ def equipos_list(request):
         )
         .order_by("-actualizado_en", "identificador")
     )
-    if not include_bajas:
+    if estado == "activo":
+        equipos = equipos.filter(is_baja=False)
+    elif estado == "baja":
+        equipos = equipos.filter(is_baja=True)
+    elif not include_bajas:
         equipos = equipos.filter(is_baja=False)
     if sociedad_id:
         equipos = equipos.filter(centro_costo__division__sociedad_id=sociedad_id)
@@ -89,6 +98,10 @@ def equipos_list(request):
         equipos = equipos.filter(entidad=entidad)
     if municipio:
         equipos = equipos.filter(municipio=municipio)
+    if critico == "1":
+        equipos = equipos.filter(infraestructura_critica=True)
+    elif critico == "0":
+        equipos = equipos.filter(infraestructura_critica=False)
     if texto:
         equipos = equipos.filter(
             Q(identificador__icontains=texto)
@@ -104,13 +117,17 @@ def equipos_list(request):
             | Q(nombre__icontains=texto)
         )
 
+    if request.GET.get("export") == "xlsx":
+        if not can_edit(request.user):
+            return render(request, "403.html", status=403)
+        return _export_equipos_xlsx(equipos)
+
     paginator = Paginator(equipos, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
 
     context = {
         "equipos": page_obj,
         "page_obj": page_obj,
-        "include_bajas": include_bajas,
         "sociedades": Equipo.objects.values_list(
             "centro_costo__division__sociedad__id",
             "centro_costo__division__sociedad__codigo",
@@ -168,10 +185,17 @@ def equipos_list(request):
             "tipo_equipo": tipo_equipo_id or "",
             "entidad": entidad,
             "municipio": municipio,
+            "estado": estado,
+            "critico": critico,
         },
         "pagination_query": _build_querystring(request, exclude={"page"}),
+        "export_query": _build_querystring(
+            request, exclude={"page"}, extra={"export": "xlsx"}
+        ),
         "can_baja": can_baja(request.user),
         "can_edit": can_edit(request.user),
+        "can_import": can_import(request.user),
+        "can_export": can_edit(request.user),
     }
     return render(request, "equipos/list.html", context)
 
@@ -279,12 +303,15 @@ def bajas_list(request):
     fecha_desde = parse_date(request.GET.get("fecha_desde") or "")
     fecha_hasta = parse_date(request.GET.get("fecha_hasta") or "")
     motivo_id = request.GET.get("motivo")
+    tipo_baja = request.GET.get("tipo_baja")
     if fecha_desde:
         bajas = bajas.filter(fecha_baja__date__gte=fecha_desde)
     if fecha_hasta:
         bajas = bajas.filter(fecha_baja__date__lte=fecha_hasta)
     if motivo_id:
         bajas = bajas.filter(motivo_id=motivo_id)
+    if tipo_baja:
+        bajas = bajas.filter(tipo_baja=tipo_baja)
 
     if request.GET.get("export") == "1":
         return _export_bajas_csv(bajas)
@@ -292,10 +319,12 @@ def bajas_list(request):
     context = {
         "bajas": bajas,
         "motivos": MotivoBaja.objects.order_by("nombre"),
+        "tipos_baja": BajaEquipo.TipoBaja.choices,
         "filtros": {
             "fecha_desde": request.GET.get("fecha_desde") or "",
             "fecha_hasta": request.GET.get("fecha_hasta") or "",
             "motivo": motivo_id or "",
+            "tipo_baja": tipo_baja or "",
         },
         "export_query": _build_querystring(request, extra={"export": "1"}),
     }
@@ -1030,6 +1059,7 @@ def auditoria_list(request):
     fecha_hasta = parse_date(request.GET.get("fecha_hasta") or "")
     usuario_id = request.GET.get("usuario")
     accion = request.GET.get("accion")
+    entidad = request.GET.get("entidad")
 
     audit_logs = AuditLog.objects.select_related("usuario", "equipo").order_by("-fecha")
     import_logs = ImportLog.objects.select_related("usuario").order_by("-fecha")
@@ -1048,6 +1078,9 @@ def auditoria_list(request):
         audit_logs = audit_logs.filter(accion=accion)
         if accion != "IMPORT":
             import_logs = import_logs.none()
+    if entidad:
+        audit_logs = audit_logs.filter(equipo__entidad=entidad)
+        import_logs = import_logs.none()
 
     registros = [
         {
@@ -1103,11 +1136,19 @@ def auditoria_list(request):
         "page_obj": page_obj,
         "usuarios": usuarios,
         "acciones": acciones_disponibles,
+        "entidades": (
+            Equipo.objects.exclude(entidad__isnull=True)
+            .exclude(entidad__exact="")
+            .values_list("entidad", flat=True)
+            .distinct()
+            .order_by("entidad")
+        ),
         "filtros": {
             "fecha_desde": request.GET.get("fecha_desde") or "",
             "fecha_hasta": request.GET.get("fecha_hasta") or "",
             "usuario": usuario_id or "",
             "accion": accion or "",
+            "entidad": entidad or "",
         },
         "export_query": _build_querystring(request, extra={"export": "1"}),
         "pagination_query": _build_querystring(request, exclude={"page"}),
@@ -1150,6 +1191,57 @@ def _export_inventario_activo_csv(equipos):
                 equipo.modelo or "",
             ]
         )
+    return response
+
+
+def _export_equipos_xlsx(equipos):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Equipos"
+
+    headers = [
+        "Nombre",
+        "Identificador",
+        "Inventario",
+        "Serie",
+        "Centro de costo",
+        "Marca",
+        "Sistema operativo",
+        "RPE responsable",
+        "Nombre responsable",
+        "Municipio",
+        "Domicilio",
+        "Estado",
+        "Crítico",
+    ]
+    sheet.append(headers)
+    for cell in sheet[1]:
+        cell.font = Font(bold=True)
+
+    for equipo in equipos:
+        sheet.append(
+            [
+                equipo.nombre,
+                equipo.identificador,
+                equipo.numero_inventario or "",
+                equipo.numero_serie,
+                str(equipo.centro_costo),
+                str(equipo.marca or ""),
+                str(equipo.sistema_operativo or ""),
+                equipo.rpe_responsable or "",
+                equipo.nombre_responsable or "",
+                equipo.municipio or "",
+                equipo.domicilio or "",
+                "Baja" if equipo.is_baja else "Activo",
+                "Sí" if equipo.infraestructura_critica else "No",
+            ]
+        )
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="equipos.xlsx"'
+    workbook.save(response)
     return response
 
 
