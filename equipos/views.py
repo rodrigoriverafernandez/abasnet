@@ -117,6 +117,24 @@ def equipos_list(request):
             | Q(nombre__icontains=texto)
         )
 
+    total_encontrados = equipos.count()
+    filtros_activos = any(
+        [
+            texto,
+            sociedad_id,
+            division_id,
+            centro_costo_id,
+            marca_id,
+            sistema_operativo_id,
+            tipo_equipo_id,
+            entidad,
+            municipio,
+            estado,
+            critico,
+            include_bajas,
+        ]
+    )
+
     if request.GET.get("export") == "xlsx":
         if not can_edit(request.user):
             return render(request, "403.html", status=403)
@@ -188,6 +206,8 @@ def equipos_list(request):
             "estado": estado,
             "critico": critico,
         },
+        "total_encontrados": total_encontrados,
+        "filtros_activos": filtros_activos,
         "pagination_query": _build_querystring(request, exclude={"page"}),
         "export_query": _build_querystring(
             request, exclude={"page"}, extra={"export": "xlsx"}

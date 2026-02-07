@@ -167,6 +167,12 @@
     </div>
 </form>
 
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <p class="text-muted mb-0">
+        Se encontraron {{ total_encontrados }} equipos{% if filtros_activos %} (con filtros aplicados){% endif %}.
+    </p>
+</div>
+
 <div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-light">
@@ -219,18 +225,36 @@
                         {% endif %}
                     </td>
                     <td class="text-end">
-                        <div class="d-inline-flex flex-wrap gap-2 justify-content-end">
-                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'equipo_detail' equipo.pk %}">
-                                Ver
+                        <div class="btn-group" role="group" aria-label="Acciones de equipo">
+                            <a
+                                class="btn btn-sm btn-outline-secondary"
+                                href="{% url 'equipo_detail' equipo.pk %}"
+                                aria-label="Ver equipo"
+                                title="Ver"
+                                data-bs-toggle="tooltip"
+                            >
+                                <i class="bi bi-eye" aria-hidden="true"></i>
                             </a>
                             {% if can_edit %}
-                                <a class="btn btn-sm btn-outline-primary" href="{% url 'equipo_editar' equipo.pk %}">
-                                    Editar
+                                <a
+                                    class="btn btn-sm btn-outline-primary"
+                                    href="{% url 'equipo_editar' equipo.pk %}"
+                                    aria-label="Editar equipo"
+                                    title="Editar"
+                                    data-bs-toggle="tooltip"
+                                >
+                                    <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                 </a>
                             {% endif %}
                             {% if can_baja and not equipo.is_baja %}
-                                <a class="btn btn-sm btn-outline-danger" href="{% url 'equipo_baja' equipo.pk %}">
-                                    Dar de baja
+                                <a
+                                    class="btn btn-sm btn-outline-danger"
+                                    href="{% url 'equipo_baja' equipo.pk %}"
+                                    aria-label="Dar de baja equipo"
+                                    title="Dar de baja"
+                                    data-bs-toggle="tooltip"
+                                >
+                                    <i class="bi bi-x-circle" aria-hidden="true"></i>
                                 </a>
                             {% endif %}
                         </div>
