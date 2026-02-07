@@ -3,8 +3,14 @@
 {% block title %}Bajas registradas{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="{% url 'inicio' %}">Inicio</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Bajas</li>
+            </ol>
+        </nav>
         <h1 class="h3 mb-1">Bajas registradas</h1>
         <p class="text-muted mb-0">Historial de equipos dados de baja.</p>
     </div>
@@ -20,8 +26,8 @@
     {% endfor %}
 {% endif %}
 
-<form method="get" class="mb-3">
-    <div class="row g-2 align-items-end">
+<form method="get" class="card card-body mb-4 shadow-sm border-0">
+    <div class="row g-3 align-items-end">
         <div class="col-md-3">
             <label class="form-label" for="fecha_desde">Fecha desde</label>
             <input
@@ -42,7 +48,18 @@
                 value="{{ filtros.fecha_hasta }}"
             >
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <label class="form-label" for="tipo_baja">Tipo de baja</label>
+            <select class="form-select" id="tipo_baja" name="tipo_baja">
+                <option value="">Todos</option>
+                {% for codigo, label in tipos_baja %}
+                    <option value="{{ codigo }}" {% if filtros.tipo_baja == codigo %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
             <label class="form-label" for="motivo">Motivo</label>
             <select class="form-select" id="motivo" name="motivo">
                 <option value="">Todos</option>
@@ -53,15 +70,16 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Aplicar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'bajas_list' %}">Limpiar filtros</a>
     </div>
 </form>
 
 <div class="table-responsive">
-    <table class="table table-striped align-middle">
-        <thead>
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
             <tr>
                 <th>Equipo</th>
                 <th>Serie</th>

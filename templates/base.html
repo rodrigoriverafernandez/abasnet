@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,58 +11,98 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
         crossorigin="anonymous"
     >
+    <style>
+        :root {
+            --cfe-ink: #1f2a44;
+            --cfe-muted: #6c757d;
+            --cfe-accent: #2e7d32;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            color: var(--cfe-ink);
+        }
+
+        .navbar-brand img {
+            height: 36px;
+        }
+
+        .btn-primary {
+            background-color: var(--cfe-accent);
+            border-color: var(--cfe-accent);
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #256628;
+            border-color: #256628;
+        }
+
+        .app-header-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .app-header-subtitle {
+            font-size: 0.8rem;
+            color: var(--cfe-muted);
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<body>
+    <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
         <div class="container">
             <div class="d-flex align-items-center gap-3 w-100">
-                <a class="navbar-brand" href="{% url 'inicio' %}">Inventario</a>
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'inicio' %}">
+                    <img src="{% static 'img/cfe_logo.svg' %}" alt="CFE">
+                    <div class="d-none d-md-flex flex-column lh-sm">
+                        <span class="app-header-title">Gerencia de Abastecimientos</span>
+                        <span class="app-header-subtitle">Auxiliaria General</span>
+                    </div>
+                </a>
                 {% if user.is_authenticated %}
-                    <div class="d-flex flex-wrap gap-2 align-items-center text-white">
-                        <a class="nav-link text-white px-2" href="{% url 'inicio' %}">Inicio</a>
-                        <a class="nav-link text-white px-2" href="{% url 'equipos_list' %}">Equipos</a>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <a class="nav-link px-2" href="{% url 'inicio' %}">Inicio</a>
+                        <a class="nav-link px-2" href="{% url 'equipos_list' %}">Equipos</a>
                         {% if can_import %}
-                            <a class="nav-link text-white px-2" href="{% url 'importar' %}">Importar</a>
+                            <a class="nav-link px-2" href="{% url 'importar' %}">Importar</a>
                         {% endif %}
                         {% if can_baja %}
-                            <a class="nav-link text-white px-2" href="{% url 'bajas_list' %}">Bajas</a>
+                            <a class="nav-link px-2" href="{% url 'bajas_list' %}">Bajas</a>
                         {% endif %}
                         {% if can_view_report %}
-                            <a class="nav-link text-white px-2" href="{% url 'reportes_home' %}">Reportes</a>
+                            <a class="nav-link px-2" href="{% url 'reportes_home' %}">Reportes</a>
                         {% endif %}
                         {% if can_audit %}
-                            <a class="nav-link text-white px-2" href="{% url 'auditoria_list' %}">Auditoría</a>
+                            <a class="nav-link px-2" href="{% url 'auditoria_list' %}">Auditoría</a>
                         {% endif %}
                         {% if user.is_superuser %}
-                            <a class="nav-link text-white px-2" href="/admin/">Admin</a>
+                            <a class="nav-link px-2" href="/admin/">Admin</a>
                         {% endif %}
-                        <a class="nav-link text-white px-2" href="{% url 'logout' %}">Logout</a>
+                        <a class="nav-link px-2" href="{% url 'logout' %}">Logout</a>
                     </div>
                 {% endif %}
-                <div class="ms-auto d-flex align-items-center gap-3 text-white">
+                <div class="ms-auto d-flex align-items-center gap-3">
                     {% if user.is_authenticated %}
-                        <span class="small">Usuario: {{ user.get_username }}</span>
+                        <span class="small text-muted">Usuario: {{ user.get_username }}</span>
                     {% else %}
-                        <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Iniciar sesión</a>
+                        <a class="btn btn-outline-secondary btn-sm" href="{% url 'login' %}">Iniciar sesión</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
     <main class="container py-4">
-        {% if user.is_authenticated %}
-            <div class="d-flex flex-wrap gap-2 mb-3">
-                {% if can_view_report %}
-                    <a class="btn btn-outline-primary" href="{% url 'reportes_home' %}">Reportes</a>
-                {% endif %}
-                {% if perms.equipos.add_equipo %}
-                    <a class="btn btn-primary" href="/admin/equipos/equipo/add/">Nuevo equipo</a>
-                {% endif %}
-            </div>
-        {% endif %}
         {% block content %}
         {% endblock %}
     </main>
+    <footer class="border-top bg-white">
+        <div class="container py-2 d-flex justify-content-between small text-muted">
+            <span>Sistema de Inventario – GAB</span>
+            <span>{% now "Y" %}</span>
+        </div>
+    </footer>
     <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
