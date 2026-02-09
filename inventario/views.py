@@ -1,7 +1,6 @@
 import csv
 from datetime import datetime
 import json
-import unicodedata
 
 from django.apps import apps
 from django.conf import settings
@@ -10,75 +9,10 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 
-from equipos.models import (
-    AuditLog,
-    CentroCosto,
-    Division,
-    Equipo,
-    ImportLog,
-    Marca,
-    ModeloEquipo,
-    SistemaOperativo,
-    Sociedad,
-    TipoEquipo,
-)
+from equipos.models import AuditLog, Equipo, ImportLog
 from equipos.permissions import can_import
 from django.db.models import Count
-ERRORS_LIMIT = 50
-
-
-def _normalize_value(value):
-    if value is None:
-        return ''
-    cleaned = unicodedata.normalize('NFKC', str(value)).strip()
-    if cleaned.lower() in {'no disponible', 'no aplica', 'n/a', 'na'}:
-        return ''
-    return cleaned
-
-
-def _get_row_value(row, *keys):
-    for key in keys:
-        if key in row and row[key] is not None:
-            return row[key]
-    return ''
-
-
-def _normalize_header(value):
-    cleaned = str(value).strip().replace('*', '').lower()
-    return ''.join(
-        char for char in unicodedata.normalize('NFKD', cleaned) if not unicodedata.combining(char)
-    )
-
-
-def _get_row_value_by_headers(row, headers):
-    if not row:
-        return ''
-    normalized_map = {_normalize_header(key): value for key, value in row.items()}
-    for header in headers:
-        if header in row and row[header] is not None:
-            return row[header]
-        normalized_header = _normalize_header(header)
-        if normalized_header in normalized_map and normalized_map[normalized_header] is not None:
-            return normalized_map[normalized_header]
-    return ''
-
-
-def _get_or_create_catalog(model, value):
-    cleaned = _normalize_value(value)
-    if not cleaned:
-        return None
-    obj, _ = model.objects.get_or_create(nombre=cleaned)
-    return obj
-
-
-def _parse_boolean(value):
-    cleaned = _normalize_value(value)
-    if not cleaned:
-        return False
-    normalized = ''.join(
-        char for char in unicodedata.normalize('NFKD', cleaned) if not unicodedata.combining(char)
-    ).lower()
-    return normalized in {"si", "sí", "s", "true", "1", "x", "yes"}
+from inventario.importer import import_inventario_csv
 
 
 def permission_denied(request, exception=None):
@@ -227,152 +161,8 @@ def importar_inventario(request):
     if request.method == 'POST':
         modo = request.POST.get('modo', 'update_create')
         context['modo'] = modo
-        resultados = {
-            'total': 0,
-            'creados': 0,
-            'actualizados': 0,
-            'omitidos': 0,
-            'errores': 0,
-        }
-        errores = []
         path = settings.CSV_INVENTARIO_PATH
-        if not path.exists():
-            errores.append({'fila': '-', 'identificador': '-', 'mensaje': 'No se encontró el archivo CSV.'})
-        else:
-            with open(path, encoding='utf-8', errors='replace', newline='') as archivo:
-                lector = csv.DictReader(archivo)
-                for numero_fila, row in enumerate(lector, start=2):
-                    resultados['total'] += 1
-                    try:
-                        inventario = _normalize_value(
-                            _get_row_value_by_headers(
-                                row,
-                                [
-                                    'Número de inventario*',
-                                    'Numero de inventario*',
-                                    'Número de inventario',
-                                    'Numero de inventario',
-                                ],
-                            )
-                        )
-                        clave = _normalize_value(_get_row_value(row, 'Clave', '\ufeffClave'))
-                        identificador = inventario or clave
-                        if not identificador:
-                            raise ValueError('Identificador vacío (Número de inventario* o Clave).')
-
-                        nombre_equipo = _normalize_value(_get_row_value(row, 'Nombre')) or identificador
-                        numero_serie = _normalize_value(_get_row_value(row, 'Número de serie*'))
-                        if not numero_serie:
-                            raise ValueError('Número de serie vacío.')
-
-                        sociedad_codigo = _normalize_value(_get_row_value(row, 'Sociedad'))
-                        sociedad_nombre = _normalize_value(_get_row_value(row, 'Nombre de Sociedad')) or sociedad_codigo
-                        if not sociedad_codigo:
-                            raise ValueError('Sociedad vacía.')
-                        sociedad, _ = Sociedad.objects.get_or_create(
-                            codigo=sociedad_codigo,
-                            defaults={'nombre': sociedad_nombre or sociedad_codigo},
-                        )
-                        if sociedad_nombre and sociedad.nombre != sociedad_nombre:
-                            sociedad.nombre = sociedad_nombre
-                            sociedad.save(update_fields=['nombre'])
-
-                        division_codigo = _normalize_value(_get_row_value(row, 'División'))
-                        division_nombre = _normalize_value(_get_row_value(row, 'Nombre de División')) or division_codigo
-                        if not division_codigo:
-                            raise ValueError('División vacía.')
-                        division, _ = Division.objects.get_or_create(
-                            sociedad=sociedad,
-                            codigo=division_codigo,
-                            defaults={'nombre': division_nombre or division_codigo},
-                        )
-                        if division_nombre and division.nombre != division_nombre:
-                            division.nombre = division_nombre
-                            division.save(update_fields=['nombre'])
-
-                        centro_codigo = _normalize_value(_get_row_value(row, 'Centro de Costo'))
-                        centro_nombre = centro_codigo
-                        if not centro_codigo:
-                            raise ValueError('Centro de costo vacío.')
-                        centro_costo, _ = CentroCosto.objects.get_or_create(
-                            division=division,
-                            codigo=centro_codigo,
-                            defaults={'nombre': centro_nombre or centro_codigo},
-                        )
-                        if centro_nombre and centro_costo.nombre != centro_nombre:
-                            centro_costo.nombre = centro_nombre
-                            centro_costo.save(update_fields=['nombre'])
-
-                        marca = _get_or_create_catalog(Marca, _get_row_value(row, 'Marca*'))
-                        sistema_operativo = _get_or_create_catalog(
-                            SistemaOperativo,
-                            _get_row_value(row, 'Sistema operativo*'),
-                        )
-                        tipo_equipo = _get_or_create_catalog(TipoEquipo, _get_row_value(row, 'Tipo de equipos*'))
-                        modelo = _get_or_create_catalog(ModeloEquipo, _get_row_value(row, 'Modelo*'))
-                        codigo_postal = _normalize_value(
-                            _get_row_value_by_headers(row, ['Código Postal', 'Codigo Postal'])
-                        )
-                        domicilio = _normalize_value(
-                            _get_row_value_by_headers(row, ['Domicilio*', 'Domicilio'])
-                        )
-                        antiguedad = _normalize_value(
-                            _get_row_value_by_headers(row, ['Antigüedad*', 'Antiguedad'])
-                        )
-                        rpe_responsable = _normalize_value(
-                            _get_row_value_by_headers(row, ['RPE de Responsable'])
-                        )
-                        nombre_responsable = _normalize_value(
-                            _get_row_value_by_headers(row, ['Nombre de Responsable'])
-                        )
-                        infraestructura_critica = _parse_boolean(
-                            _get_row_value_by_headers(row, ['Es infraestructura crítica?', 'Es infraestructura critica?'])
-                        )
-
-                        equipo_existente = Equipo.objects.filter(identificador=identificador).first()
-                        if equipo_existente and modo == 'create_only':
-                            resultados['omitidos'] += 1
-                            continue
-                        if not equipo_existente and modo == 'update_only':
-                            resultados['omitidos'] += 1
-                            continue
-
-                        defaults = {
-                            'centro_costo': centro_costo,
-                            'clave': clave,
-                            'numero_inventario': inventario,
-                            'nombre': nombre_equipo,
-                            'numero_serie': numero_serie,
-                            'marca': marca,
-                            'sistema_operativo': sistema_operativo,
-                            'tipo_equipo': tipo_equipo,
-                            'modelo': modelo,
-                            'codigo_postal': codigo_postal or None,
-                            'domicilio': domicilio or None,
-                            'antiguedad': antiguedad or None,
-                            'rpe_responsable': rpe_responsable or None,
-                            'nombre_responsable': nombre_responsable or None,
-                            'infraestructura_critica': infraestructura_critica,
-                        }
-                        if equipo_existente:
-                            for campo, valor in defaults.items():
-                                setattr(equipo_existente, campo, valor)
-                            equipo_existente.save()
-                            resultados['actualizados'] += 1
-                        else:
-                            Equipo.objects.create(identificador=identificador, **defaults)
-                            resultados['creados'] += 1
-                    except Exception as exc:
-                        resultados['errores'] += 1
-                        resultados['omitidos'] += 1
-                        if len(errores) < ERRORS_LIMIT:
-                            errores.append(
-                                {
-                                    'fila': numero_fila,
-                                    'identificador': identificador if 'identificador' in locals() else '',
-                                    'mensaje': str(exc),
-                                }
-                            )
+        resultados, errores = import_inventario_csv(path, modo)
 
         log = ImportLog.objects.create(
             usuario=request.user,
