@@ -3,7 +3,7 @@ import re
 from urllib.parse import urlencode
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Count, Prefetch, Q
@@ -26,6 +26,7 @@ from .models import (
     SistemaOperativo,
     TipoEquipo,
 )
+from .forms import EquipoForm
 from .permissions import (
     can_audit,
     can_baja,
@@ -219,6 +220,34 @@ def equipos_list(request):
         "can_view_report": can_view_report(request.user),
     }
     return render(request, "equipos/list.html", context)
+
+
+@login_required
+@permission_required("equipos.add_equipo", raise_exception=True)
+def equipo_create(request):
+    if request.method == "POST":
+        form = EquipoForm(request.POST)
+        if form.is_valid():
+            equipo = form.save()
+            AuditLog.objects.create(
+                usuario=request.user,
+                accion="ALTA_EQUIPO",
+                resumen=(
+                    f"Alta de equipo {equipo.identificador} "
+                    f"({equipo.numero_serie})."
+                ),
+                equipo=equipo,
+            )
+            messages.success(request, "Equipo creado correctamente.")
+            return redirect("equipos_list")
+        messages.error(request, "Revisa los campos marcados para continuar.")
+    else:
+        form = EquipoForm()
+
+    context = {
+        "form": form,
+    }
+    return render(request, "equipos/create.html", context)
 
 
 @login_required

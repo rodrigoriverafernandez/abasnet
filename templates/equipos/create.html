@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Alta de equipo{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Alta de equipo</h1>
+        <p class="text-muted mb-0">Registro corporativo de equipos</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'equipos_list' %}">Volver</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+{% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+    </div>
+{% endif %}
+
+<form method="post" class="card shadow-sm">
+    {% csrf_token %}
+    <div class="card-header bg-white">
+        <strong>Alta de Equipo</strong>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <h2 class="h6 text-uppercase text-muted">Datos generales</h2>
+            <div class="row g-3 mt-1">
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.identificador.id_for_label }}">Identificador</label>
+                    {{ form.identificador }}
+                    <div class="text-danger small">{{ form.identificador.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.nombre.id_for_label }}">Nombre</label>
+                    {{ form.nombre }}
+                    <div class="text-danger small">{{ form.nombre.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.numero_serie.id_for_label }}">Número de serie</label>
+                    {{ form.numero_serie }}
+                    <div class="text-danger small">{{ form.numero_serie.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.clave.id_for_label }}">Clave</label>
+                    {{ form.clave }}
+                    <div class="text-danger small">{{ form.clave.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.numero_inventario.id_for_label }}">Número de inventario</label>
+                    {{ form.numero_inventario }}
+                    <div class="text-danger small">{{ form.numero_inventario.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.marca.id_for_label }}">Marca</label>
+                    {{ form.marca }}
+                    <div class="text-danger small">{{ form.marca.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.modelo.id_for_label }}">Modelo</label>
+                    {{ form.modelo }}
+                    <div class="text-danger small">{{ form.modelo.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.tipo_equipo.id_for_label }}">Tipo de equipo</label>
+                    {{ form.tipo_equipo }}
+                    <div class="text-danger small">{{ form.tipo_equipo.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.sistema_operativo.id_for_label }}">
+                        Sistema operativo
+                    </label>
+                    {{ form.sistema_operativo }}
+                    <div class="text-danger small">{{ form.sistema_operativo.errors }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h2 class="h6 text-uppercase text-muted">Ubicación</h2>
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.centro_costo.id_for_label }}">Centro de costo</label>
+                    {{ form.centro_costo }}
+                    <div class="text-danger small">{{ form.centro_costo.errors }}</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.entidad.id_for_label }}">Entidad</label>
+                    {{ form.entidad }}
+                    <div class="text-danger small">{{ form.entidad.errors }}</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.municipio.id_for_label }}">Municipio</label>
+                    {{ form.municipio }}
+                    <div class="text-danger small">{{ form.municipio.errors }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="{{ form.domicilio.id_for_label }}">Domicilio</label>
+                    {{ form.domicilio }}
+                    <div class="text-danger small">{{ form.domicilio.errors }}</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.codigo_postal.id_for_label }}">Código postal</label>
+                    {{ form.codigo_postal }}
+                    <div class="text-danger small">{{ form.codigo_postal.errors }}</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="{{ form.antiguedad.id_for_label }}">Antigüedad</label>
+                    {{ form.antiguedad }}
+                    <div class="text-danger small">{{ form.antiguedad.errors }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h2 class="h6 text-uppercase text-muted">Responsable</h2>
+            <div class="row g-3 mt-1">
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.rpe_responsable.id_for_label }}">RPE responsable</label>
+                    {{ form.rpe_responsable }}
+                    <div class="text-danger small">{{ form.rpe_responsable.errors }}</div>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="{{ form.nombre_responsable.id_for_label }}">
+                        Nombre responsable
+                    </label>
+                    {{ form.nombre_responsable }}
+                    <div class="text-danger small">{{ form.nombre_responsable.errors }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <h2 class="h6 text-uppercase text-muted">Técnico</h2>
+            <div class="row g-3 mt-1">
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.direccion_ip.id_for_label }}">Dirección IP</label>
+                    {{ form.direccion_ip }}
+                    <div class="text-danger small">{{ form.direccion_ip.errors }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.direccion_mac.id_for_label }}">Dirección MAC</label>
+                    {{ form.direccion_mac }}
+                    <div class="text-danger small">{{ form.direccion_mac.errors }}</div>
+                </div>
+                <div class="col-md-4 d-flex align-items-center">
+                    <div class="form-check mt-4">
+                        {{ form.infraestructura_critica }}
+                        <label class="form-check-label" for="{{ form.infraestructura_critica.id_for_label }}">
+                            Infraestructura crítica
+                        </label>
+                    </div>
+                    <div class="text-danger small ms-3">
+                        {{ form.infraestructura_critica.errors }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-end gap-2">
+        <a class="btn btn-secondary" href="{% url 'equipos_list' %}">Cancelar</a>
+        <button type="submit" class="btn btn-success">Guardar</button>
+    </div>
+</form>
+{% endblock %}
