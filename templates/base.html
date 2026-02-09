@@ -79,6 +79,9 @@
                     <div class="d-flex flex-wrap gap-2 align-items-center">
                         <a class="nav-link px-2" href="{% url 'inicio' %}">Inicio</a>
                         <a class="nav-link px-2" href="{% url 'equipos_list' %}">Equipos</a>
+                        {% if perms.equipos.add_equipo %}
+                            <a class="nav-link px-2" href="{% url 'equipo_create' %}">Nuevo equipo</a>
+                        {% endif %}
                         {% if can_import %}
                             <a class="nav-link px-2" href="{% url 'importar' %}">Importar</a>
                         {% endif %}
