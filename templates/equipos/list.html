@@ -3,6 +3,14 @@
 {% block title %}Equipos{% endblock %}
 
 {% block content %}
+<style>
+    .table-sticky thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+</style>
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
         <nav aria-label="breadcrumb">
@@ -22,39 +30,55 @@
     {% endfor %}
 {% endif %}
 
-<form method="get" class="mb-4">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-        <div class="flex-grow-1">
-            <label class="form-label" for="texto">Buscador</label>
-            <input
-                class="form-control"
-                type="text"
-                id="texto"
-                name="texto"
-                placeholder="Buscar por inventario, serie, nombre, RPE, centro de costo…"
-                value="{{ filtros.texto }}"
-            >
-        </div>
-        <div class="d-flex align-items-end gap-2">
-            {% if can_import %}
-                <a class="btn btn-outline-secondary" href="{% url 'importar' %}">Importar</a>
-            {% endif %}
-            {% if can_edit %}
-                <a class="btn btn-primary" href="/admin/equipos/equipo/add/">Nuevo equipo</a>
-            {% endif %}
-            {% if can_export %}
-                <a class="btn btn-outline-success" href="?{{ export_query }}">Exportar Excel</a>
-            {% endif %}
-            {% if can_baja %}
-                <a class="btn btn-outline-primary" href="{% url 'bajas_list' %}">Ver bajas</a>
-            {% endif %}
-        </div>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex flex-wrap gap-2">
+        {% if can_import %}
+            <a class="btn btn-outline-secondary" href="{% url 'importar' %}">Importar</a>
+        {% endif %}
+        {% if can_view_report %}
+            <a class="btn btn-outline-secondary" href="{% url 'reportes_home' %}">Reportes</a>
+        {% endif %}
+        {% if can_export %}
+            <a class="btn btn-outline-success" href="{% url 'equipos_export_xlsx' %}?{{ export_query }}">
+                Exportar Excel
+            </a>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'equipos_list' %}">Limpiar filtros</a>
     </div>
+    {% if can_edit %}
+        <a class="btn btn-primary" href="/admin/equipos/equipo/add/">Nuevo equipo</a>
+    {% endif %}
+</div>
 
+<form method="get" class="mb-4">
     <div class="card shadow-sm border-0 mb-3">
-        <div class="card-body">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">Filtros</span>
+            <button
+                class="btn btn-sm btn-outline-secondary"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#filtrosEquipos"
+                aria-expanded="{% if filtros_activos %}true{% else %}false{% endif %}"
+                aria-controls="filtrosEquipos"
+            >
+                Mostrar / ocultar
+            </button>
+        </div>
+        <div class="card-body collapse {% if filtros_activos %}show{% endif %}" id="filtrosEquipos">
             <div class="row g-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="texto">Texto libre</label>
+                    <input
+                        class="form-control"
+                        type="text"
+                        id="texto"
+                        name="texto"
+                        placeholder="Buscar por inventario, serie, nombre, RPE, centro de costo…"
+                        value="{{ filtros.texto }}"
+                    >
+                </div>
+                <div class="col-md-4">
                     <label class="form-label" for="centro_costo">Centro de costo</label>
                     <select class="form-select" id="centro_costo" name="centro_costo">
                         <option value="">Todos</option>
@@ -65,7 +89,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label" for="marca">Marca</label>
                     <select class="form-select" id="marca" name="marca">
                         <option value="">Todas</option>
@@ -76,7 +100,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label" for="sistema_operativo">Sistema operativo</label>
                     <select class="form-select" id="sistema_operativo" name="sistema_operativo">
                         <option value="">Todos</option>
@@ -87,56 +111,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="estado">Activo / Baja</label>
-                    <select class="form-select" id="estado" name="estado">
-                        <option value="" {% if not filtros.estado %}selected{% endif %}>Todos</option>
-                        <option value="activo" {% if filtros.estado == "activo" %}selected{% endif %}>Activo</option>
-                        <option value="baja" {% if filtros.estado == "baja" %}selected{% endif %}>Baja</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="critico">Crítico</label>
-                    <select class="form-select" id="critico" name="critico">
-                        <option value="" {% if filtros.critico == "" %}selected{% endif %}>Todos</option>
-                        <option value="1" {% if filtros.critico == "1" %}selected{% endif %}>Sí</option>
-                        <option value="0" {% if filtros.critico == "0" %}selected{% endif %}>No</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="sociedad">Sociedad</label>
-                    <select class="form-select" id="sociedad" name="sociedad">
-                        <option value="">Todas</option>
-                        {% for id, codigo, nombre in sociedades %}
-                            <option value="{{ id }}" {% if filtros.sociedad == id|stringformat:"s" %}selected{% endif %}>
-                                {{ codigo }} - {{ nombre }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="division">División</label>
-                    <select class="form-select" id="division" name="division">
-                        <option value="">Todas</option>
-                        {% for id, codigo, nombre in divisiones %}
-                            <option value="{{ id }}" {% if filtros.division == id|stringformat:"s" %}selected{% endif %}>
-                                {{ codigo }} - {{ nombre }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="tipo_equipo">Tipo de equipo</label>
-                    <select class="form-select" id="tipo_equipo" name="tipo_equipo">
-                        <option value="">Todos</option>
-                        {% for id, nombre in tipos_equipo %}
-                            <option value="{{ id }}" {% if filtros.tipo_equipo == id|stringformat:"s" %}selected{% endif %}>
-                                {{ nombre }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label" for="entidad">Entidad</label>
                     <select class="form-select" id="entidad" name="entidad">
                         <option value="">Todas</option>
@@ -147,12 +122,61 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label" for="municipio">Municipio</label>
                     <select class="form-select" id="municipio" name="municipio">
                         <option value="">Todos</option>
                         {% for nombre in municipios %}
                             <option value="{{ nombre }}" {% if filtros.municipio == nombre %}selected{% endif %}>
+                                {{ nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="estado">Activo / Baja</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="" {% if not filtros.estado %}selected{% endif %}>Todos</option>
+                        <option value="activo" {% if filtros.estado == "activo" %}selected{% endif %}>Activo</option>
+                        <option value="baja" {% if filtros.estado == "baja" %}selected{% endif %}>Baja</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="critico">Crítico</label>
+                    <select class="form-select" id="critico" name="critico">
+                        <option value="" {% if filtros.critico == "" %}selected{% endif %}>Todos</option>
+                        <option value="1" {% if filtros.critico == "1" %}selected{% endif %}>Sí</option>
+                        <option value="0" {% if filtros.critico == "0" %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="sociedad">Sociedad</label>
+                    <select class="form-select" id="sociedad" name="sociedad">
+                        <option value="">Todas</option>
+                        {% for id, codigo, nombre in sociedades %}
+                            <option value="{{ id }}" {% if filtros.sociedad == id|stringformat:"s" %}selected{% endif %}>
+                                {{ codigo }} - {{ nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="division">División</label>
+                    <select class="form-select" id="division" name="division">
+                        <option value="">Todas</option>
+                        {% for id, codigo, nombre in divisiones %}
+                            <option value="{{ id }}" {% if filtros.division == id|stringformat:"s" %}selected{% endif %}>
+                                {{ codigo }} - {{ nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="tipo_equipo">Tipo de equipo</label>
+                    <select class="form-select" id="tipo_equipo" name="tipo_equipo">
+                        <option value="">Todos</option>
+                        {% for id, nombre in tipos_equipo %}
+                            <option value="{{ id }}" {% if filtros.tipo_equipo == id|stringformat:"s" %}selected{% endif %}>
                                 {{ nombre }}
                             </option>
                         {% endfor %}
@@ -173,35 +197,34 @@
     </p>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-light">
+{% if equipos %}
+    <div class="table-responsive">
+        <table class="table table-sm table-hover table-striped align-middle table-sticky">
+            <thead class="table-light">
             <tr>
-                <th>Nombre</th>
                 <th>Inventario</th>
                 <th>Serie</th>
-                <th>Centro de costo</th>
-                <th>Marca</th>
+                <th>Marca / Modelo</th>
                 <th>SO</th>
-                <th>Responsable</th>
+                <th>Centro de costo</th>
+                <th>Responsable (RPE)</th>
                 <th>Ubicación</th>
                 <th>Estado</th>
                 <th>Crítico</th>
                 <th class="text-end">Acciones</th>
             </tr>
-        </thead>
-        <tbody>
-            {% for equipo in equipos %}
+            </thead>
+            <tbody>
+                {% for equipo in equipos %}
                 <tr>
-                    <td>
-                        <div class="fw-semibold">{{ equipo.nombre|default:"-" }}</div>
-                        <div class="text-muted small">{{ equipo.identificador }}</div>
-                    </td>
                     <td>{{ equipo.numero_inventario|default:"-" }}</td>
                     <td>{{ equipo.numero_serie }}</td>
-                    <td>{{ equipo.centro_costo.codigo }} - {{ equipo.centro_costo.nombre }}</td>
-                    <td>{{ equipo.marca|default:"-" }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ equipo.marca|default:"-" }}</div>
+                        <div class="text-muted small">{{ equipo.modelo|default:"-" }}</div>
+                    </td>
                     <td>{{ equipo.sistema_operativo|default:"-" }}</td>
+                    <td>{{ equipo.centro_costo.codigo }} - {{ equipo.centro_costo.nombre }}</td>
                     <td>
                         <div class="fw-semibold">{{ equipo.rpe_responsable|default:"-" }}</div>
                         <div class="text-muted small">{{ equipo.nombre_responsable|default:"-" }}</div>
@@ -260,16 +283,17 @@
                         </div>
                     </td>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="11" class="text-center text-muted">
-                        No se encontraron equipos con el filtro seleccionado.
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center text-muted">
+            No se encontraron equipos con los filtros seleccionados.
+        </div>
+    </div>
+{% endif %}
 
 {% if page_obj.has_other_pages %}
     <nav aria-label="Paginación de equipos">

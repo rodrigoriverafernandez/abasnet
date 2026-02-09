@@ -50,8 +50,7 @@ def _build_querystring(request, exclude=None, extra=None):
     return params.urlencode()
 
 
-@login_required
-def equipos_list(request):
+def _get_equipos_queryset(request):
     texto = request.GET.get("texto", "").strip()
     sociedad_id = request.GET.get("sociedad")
     division_id = request.GET.get("division")
@@ -117,7 +116,6 @@ def equipos_list(request):
             | Q(nombre__icontains=texto)
         )
 
-    total_encontrados = equipos.count()
     filtros_activos = any(
         [
             texto,
@@ -135,10 +133,26 @@ def equipos_list(request):
         ]
     )
 
-    if request.GET.get("export") == "xlsx":
-        if not can_edit(request.user):
-            return render(request, "403.html", status=403)
-        return _export_equipos_xlsx(equipos)
+    filtros = {
+        "texto": texto,
+        "sociedad": sociedad_id or "",
+        "division": division_id or "",
+        "centro_costo": centro_costo_id or "",
+        "marca": marca_id or "",
+        "sistema_operativo": sistema_operativo_id or "",
+        "tipo_equipo": tipo_equipo_id or "",
+        "entidad": entidad,
+        "municipio": municipio,
+        "estado": estado,
+        "critico": critico,
+    }
+    return equipos, filtros, filtros_activos
+
+
+@login_required
+def equipos_list(request):
+    equipos, filtros, filtros_activos = _get_equipos_queryset(request)
+    total_encontrados = equipos.count()
 
     paginator = Paginator(equipos, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
@@ -193,31 +207,26 @@ def equipos_list(request):
             .distinct()
             .order_by("municipio")
         ),
-        "filtros": {
-            "texto": texto,
-            "sociedad": sociedad_id or "",
-            "division": division_id or "",
-            "centro_costo": centro_costo_id or "",
-            "marca": marca_id or "",
-            "sistema_operativo": sistema_operativo_id or "",
-            "tipo_equipo": tipo_equipo_id or "",
-            "entidad": entidad,
-            "municipio": municipio,
-            "estado": estado,
-            "critico": critico,
-        },
+        "filtros": filtros,
         "total_encontrados": total_encontrados,
         "filtros_activos": filtros_activos,
         "pagination_query": _build_querystring(request, exclude={"page"}),
-        "export_query": _build_querystring(
-            request, exclude={"page"}, extra={"export": "xlsx"}
-        ),
+        "export_query": _build_querystring(request, exclude={"page"}),
         "can_baja": can_baja(request.user),
         "can_edit": can_edit(request.user),
         "can_import": can_import(request.user),
         "can_export": can_edit(request.user),
+        "can_view_report": can_view_report(request.user),
     }
     return render(request, "equipos/list.html", context)
+
+
+@login_required
+def equipos_export_xlsx(request):
+    if not can_edit(request.user):
+        return render(request, "403.html", status=403)
+    equipos, _, _ = _get_equipos_queryset(request)
+    return _export_equipos_xlsx(equipos)
 
 
 @login_required
