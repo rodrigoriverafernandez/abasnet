@@ -70,7 +70,7 @@ class Equipo(models.Model):
     )
     identificador = models.CharField(max_length=150, unique=True)
     clave = models.CharField(max_length=150, blank=True)
-    numero_inventario = models.CharField(max_length=150, blank=True)
+    numero_inventario = models.CharField(max_length=150, blank=True, db_index=True)
     nombre = models.CharField(max_length=150)
     numero_serie = models.CharField(max_length=100, unique=True)
     direccion_ip = models.CharField(max_length=50, blank=True, null=True)
@@ -97,6 +97,16 @@ class Equipo(models.Model):
     rpe_responsable = models.CharField(max_length=15, blank=True, null=True)
     nombre_responsable = models.CharField(max_length=150, blank=True, null=True)
     infraestructura_critica = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["numero_inventario"],
+                condition=models.Q(numero_inventario__isnull=False)
+                & ~models.Q(numero_inventario=""),
+                name="unique_numero_inventario_nonempty",
+            )
+        ]
 
     def __str__(self):
         return f"{self.nombre} ({self.numero_serie})"

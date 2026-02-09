@@ -4,6 +4,10 @@ from .models import Equipo
 
 
 class EquipoForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["numero_inventario"].required = True
+
     class Meta:
         model = Equipo
         fields = [
@@ -52,4 +56,3 @@ class EquipoForm(forms.ModelForm):
                 attrs={"class": "form-check-input"}
             ),
         }
-

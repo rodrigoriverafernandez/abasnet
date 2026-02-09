@@ -30,7 +30,7 @@ ERRORS_LIMIT = 50
 def _normalize_value(value):
     if value is None:
         return ''
-    cleaned = str(value).strip()
+    cleaned = unicodedata.normalize('NFKC', str(value)).strip()
     if cleaned.lower() in {'no disponible', 'no aplica', 'n/a', 'na'}:
         return ''
     return cleaned
@@ -244,7 +244,17 @@ def importar_inventario(request):
                 for numero_fila, row in enumerate(lector, start=2):
                     resultados['total'] += 1
                     try:
-                        inventario = _normalize_value(_get_row_value(row, 'Número de inventario*'))
+                        inventario = _normalize_value(
+                            _get_row_value_by_headers(
+                                row,
+                                [
+                                    'Número de inventario*',
+                                    'Numero de inventario*',
+                                    'Número de inventario',
+                                    'Numero de inventario',
+                                ],
+                            )
+                        )
                         clave = _normalize_value(_get_row_value(row, 'Clave', '\ufeffClave'))
                         identificador = inventario or clave
                         if not identificador:
