@@ -31,6 +31,7 @@ def _build_dashboard_context(request):
     total_bajas = Equipo.objects.filter(is_baja=True).count()
     total_activos = Equipo.objects.filter(is_baja=False).count()
     total_criticos = Equipo.objects.filter(infraestructura_critica=True).count()
+    total_no_criticos = total_equipos - total_criticos
     porcentaje_bajas = round((total_bajas / total_equipos) * 100, 2) if total_equipos else 0
 
     responsables_unicos = (
@@ -106,6 +107,7 @@ def _build_dashboard_context(request):
         "total_activos": total_activos,
         "total_bajas": total_bajas,
         "total_criticos": total_criticos,
+        "total_no_criticos": total_no_criticos,
         "porcentaje_bajas": porcentaje_bajas,
         "responsables_unicos": responsables_unicos,
         "centros_unicos": centros_unicos,
