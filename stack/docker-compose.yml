@@ -1,0 +1,82 @@
+version: '3.9'
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: abasnet_nginx
+    depends_on:
+      - frontend
+      - strapi
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    networks:
+      - web
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: abasnet_frontend
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    expose:
+      - "3000"
+    depends_on:
+      - strapi
+    networks:
+      - web
+
+  strapi:
+    build:
+      context: ./strapi
+      dockerfile: Dockerfile
+    container_name: abasnet_strapi
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_CLIENT=postgres
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=${POSTGRES_DB}
+      - DATABASE_USERNAME=${POSTGRES_USER}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - "1337"
+    depends_on:
+      - postgres
+    volumes:
+      - strapi_uploads:/opt/app/public/uploads
+    networks:
+      - web
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: abasnet_postgres
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - web
+
+networks:
+  web:
+
+volumes:
+  pgdata:
+  strapi_uploads:
